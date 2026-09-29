@@ -12,8 +12,8 @@ import { fileURLToPath } from 'node:url';
 
 const desktopRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const dshRoot = resolve(desktopRoot, '../deepseek-harness');
-// 补丁按 dsh 版本分目录存放；当前构建基于 dsh dsh-v0.1.5-rc.2。
-const patchDir = resolve(desktopRoot, 'patches/dsh-v0.1.5-rc.2');
+// 补丁按 dsh 版本分目录存放；当前构建基于 dsh dsh-v0.1.7-rc.2。
+const patchDir = resolve(desktopRoot, 'patches/dsh-v0.1.7-rc.2');
 const patchFiles = [
   resolve(patchDir, 'dsh-disable-hmr.patch'),
   resolve(patchDir, 'dsh-disable-native-picker.patch'),

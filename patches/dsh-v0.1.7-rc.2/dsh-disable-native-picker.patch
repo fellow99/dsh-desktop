@@ -1,0 +1,14 @@
+diff --git a/packages/host/directory-picker-auto/src/resolve.ts b/packages/host/directory-picker-auto/src/resolve.ts
+index b048376784..42534ca551 100644
+--- a/packages/host/directory-picker-auto/src/resolve.ts
++++ b/packages/host/directory-picker-auto/src/resolve.ts
+@@ -47,6 +47,9 @@ const present = (value: string | undefined): boolean => value !== undefined && v
+  * @returns the backend kind to mount.
+  */
+ export function resolveDirectoryPickerBackend(facts: DirectoryPickerHostFacts): DirectoryPickerBackendKind {
++  // Electron 桌面壳：原生目录对话框的 worker 会 spawn process.execPath（Electron 下是 electron.exe
++  // 而非 node），且 koffi 依赖 Node 内部符号，故强制走 browse（内置目录浏览，经 host.listDirectory）。
++  if ('electron' in process.versions) return 'browse'
+   if (facts.bindHost !== '127.0.0.1') return 'browse'
+   if (facts.ssh) return 'browse'
+   if (facts.platform === 'darwin' || facts.platform === 'win32') return 'native'

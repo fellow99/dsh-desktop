@@ -25,7 +25,7 @@ jobs:
       - name: Checkout dsh (sibling)
         shell: bash
         run: |
-          git clone --depth 1 --branch "dsh-v0.1.5-rc.2" \
+          git clone --depth 1 --branch "dsh-v0.1.7-rc.2" \
             https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
 
       # dsh-market（插件市场）同样以 ../dsh-market 同级源码引用：collect-dsh.mjs 会把其

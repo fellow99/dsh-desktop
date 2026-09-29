@@ -12,7 +12,7 @@
  */
 import { execSync } from 'node:child_process';
 import { cpSync, existsSync, lstatSync, readFileSync, readdirSync, realpathSync, rmSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // pnpm/tsdown 在无 TTY 时中止模块重建与依赖检查，故设 CI 使其自动处理。
@@ -30,6 +30,81 @@ const distDir = resolve(desktopRoot, 'dsh-dist');
 function run(cmd, cwd) {
   console.log(`\n> ${cmd}`);
   execSync(cmd, { cwd, stdio: 'inherit' });
+}
+
+/** 读取物化后包的依赖/peer 依赖清单（用于补全 .pnpm 作用域 sibling）。 */
+function readDependencyNames(pkgDir) {
+  try {
+    const manifest = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+    return [...new Set([
+      ...Object.keys(manifest.dependencies ?? {}),
+      ...Object.keys(manifest.peerDependencies ?? {}),
+      ...Object.keys(manifest.optionalDependencies ?? {}),
+    ])];
+  } catch {
+    return [];
+  }
+}
+
+/** 读取某目录对应包的版本号（用于版本冲突判定）。 */
+function readPackageVersion(pkgDir) {
+  try {
+    return JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8')).version;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * 物化单个 .pnpm 包后，补全其作用域 sibling 依赖。
+ *
+ * Junction 目标（realpath）形如 `.pnpm/<pkg>@<hash>/node_modules/<pkg>`，pnpm 把该包闭包
+ * 内的依赖以 sibling Junction 放在同级 `node_modules/`。cpSync 只复制了包自身目录。
+ *
+ * 关键：不能对每个包都整份复制依赖（会产生海量重复、撑爆打包内存）。只有当作用域 sibling
+ * 的版本与顶层 node_modules 中的版本「不同或缺失」时才嵌套复制——即真正存在版本冲突的依赖
+ * （如 execa 需要 get-stream@9，而顶层是 dev 链的 @5）。版本一致时由 Node 向上解析到顶层。
+ *
+ * @param scopeRoot 原始包在 .pnpm 中的真实目录（Junction realpath 目标）
+ * @param destPkg 物化后的包副本目录
+ */
+function materializePackageScopeDeps(scopeRoot, destPkg) {
+  const scopeNm = resolve(scopeRoot, '..'); // .pnpm/<pkg>@<hash>/node_modules
+  const pnpmSep = join('.pnpm', ''); // `.pnpm` + 平台分隔符（/ 或 \）
+  if (!scopeNm.includes(pnpmSep)) return;
+  // 顶层 node_modules：scopeNm = <dist>/node_modules/.pnpm/<entry>/node_modules
+  const topNm = resolve(scopeNm, '../../../');
+  const wanted = new Set(readDependencyNames(scopeRoot));
+  if (wanted.size === 0) return;
+  for (const name of wanted) {
+    const segments = name.split('/');
+    const depLink = join(scopeNm, ...segments);
+    let depSt;
+    try {
+      depSt = lstatSync(depLink);
+    } catch {
+      continue; // 作用域无该 sibling（optional 缺失等），交由其他路径解析
+    }
+    if (!depSt.isSymbolicLink() && !depSt.isDirectory()) continue;
+    let depReal;
+    try {
+      depReal = depSt.isSymbolicLink() ? realpathSync(depLink) : depLink;
+    } catch {
+      continue;
+    }
+    // 版本冲突判定：顶层无该包或版本不同才需要嵌套复制。
+    const scopeVersion = readPackageVersion(depReal);
+    const topVersion = readPackageVersion(join(topNm, ...segments));
+    if (topVersion !== undefined && topVersion === scopeVersion) continue;
+    const dest = join(destPkg, 'node_modules', ...segments);
+    if (existsSync(dest)) continue;
+    try {
+      cpSync(depReal, dest, { recursive: true, dereference: true });
+      console.log(`[collect-dsh] 嵌套冲突依赖 ${name}@${scopeVersion ?? '?'} → ${basename(scopeRoot)}/node_modules`);
+    } catch (err) {
+      console.warn(`[collect-dsh] 嵌套冲突依赖失败 ${name}: ${err.message}`);
+    }
+  }
 }
 
 /** 递归物化目录下的 Junction 为真实文件（跳过 .bin 与 .pnpm）。 */
@@ -51,10 +126,18 @@ function materializeJunctions(dir, depth = 0) {
       continue;
     }
     if (st.isSymbolicLink()) {
+      let scopeRoot;
       try {
-        const target = realpathSync(fullPath);
+        scopeRoot = realpathSync(fullPath);
+      } catch (err) {
+        console.warn(`[collect-dsh] 解析 junction 失败 ${fullPath}: ${err.message}`);
+        continue;
+      }
+      try {
         rmSync(fullPath, { recursive: true, force: true });
-        cpSync(target, fullPath, { recursive: true, dereference: true });
+        cpSync(scopeRoot, fullPath, { recursive: true, dereference: true });
+        // 补全该包在 .pnpm 作用域中的 sibling 依赖（必须在 .pnpm 删除前执行）
+        materializePackageScopeDeps(scopeRoot, fullPath);
       } catch (err) {
         console.warn(`[collect-dsh] 物化失败 ${fullPath}: ${err.message}`);
       }
@@ -257,22 +340,23 @@ if (existsSync(distDir)) rmSync(distDir, { recursive: true, force: true });
 // 2. pnpm deploy 物化依赖闭包（apps/cli 的 dependencies 含 web profile 全部插件）
 run(`corepack pnpm --filter @deepseek-ai/dsh deploy --legacy "${distDir}"`, dshRoot);
 
-// 3. 物化顶层 Junction（js-yaml 等）
+// 3. 先物化非 hoisted 依赖（zod / get-stream@5 等）到顶层，使下一步 Junction 物化时的
+//    版本冲突判定能看到完整顶层版本（该步骤须在 .pnpm 删除前完成）。
+console.log('\n[collect-dsh] 物化非 hoisted 依赖...');
+collectNonHoistedDeps();
+
+// 4. 物化顶层 Junction（js-yaml、execa 等）
 console.log('\n[collect-dsh] 物化 Junction 为真实文件...');
 materializeJunctions(join(distDir, 'node_modules'));
 
-// 4. 补全 @deepseek-ai 包（peer 依赖与 link: override）
+// 5. 补全 @deepseek-ai 包（peer 依赖与 link: override）
 console.log('\n[collect-dsh] 补全 @deepseek-ai 包...');
 collectWorkspacePackages();
 
-// 4b. 物化 landlock-run 入口包（native 原生模块，win32 无平台 .node，但沙箱插件静态 import 其入口；
+// 5b. 物化 landlock-run 入口包（native 原生模块，win32 无平台 .node，但沙箱插件静态 import 其入口；
 //     产品概念设计已确认 MVP 裁掉 landlock 原生沙箱，此处仅物化入口使 import 不报错）
 const landlockEntry = resolve(dshRoot, 'native/landlock-run/packages/entry');
 copyPackage(landlockEntry, resolve(distDir, 'node_modules/@deepseek-ai'));
-
-// 5. 物化非 hoisted 依赖（zod 等）
-console.log('\n[collect-dsh] 物化非 hoisted 依赖...');
-collectNonHoistedDeps();
 
 // 6. 删除 .pnpm store（已物化，冗余）
 const pnpmStore = resolve(distDir, 'node_modules/.pnpm');

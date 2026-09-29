@@ -11,6 +11,14 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    // dsh-dist/ 与 runtime/ 必须排除在 app 源拷贝（→app.asar）之外：二者由下方 extraResource
+    // 打入 asar 外的 resources/（host.ts 经 process.resourcesPath 以 file:// 动态 import）。
+    // 若不排除，packager 会先把这两个目录（合计 ~1GB / 5.6 万文件）拷进 resources/app 打进
+    // app.asar，再经 extraResource 重复拷贝一次 —— asar 对海量小文件的 header 建树会吃掉
+    // 数 GB 内存并耗时数十分钟。
+    // 注：forge 合并 packageOpts 时 packagerConfig.ignore 会覆盖其内置的 /^\/out\// 默认值，
+    // 故在此一并保留 out 目录排除。
+    ignore: [/^\/out(\/|$)/, /^\/logs(\/|$)/, /^\/dsh-dist(\/|$)/, /^\/runtime(\/|$)/],
     // 应用图标：@electron/packager 按平台自动补扩展名（win32→icon.ico / darwin→icon.icns / linux→icon.png）
     icon: 'resources/icon',
     // Linux 可执行文件名：maker-rpm/deb 的 bin 默认取 package.json 的 name，而非 productName。
@@ -24,7 +32,11 @@ const config: ForgeConfig = {
     // 注：@electron/packager 18.x 的 extraResource 仅支持字符串（复制到 resources/<basename>）。
     extraResource: ['dsh-dist', 'runtime', 'resources/icon.png', 'resources/tray.png'],
   },
-  rebuildConfig: {},
+  // 不设置 rebuildConfig：本应用生产依赖（electron-squirrel-startup）无原生模块；dsh-dist
+  // 由 extraResource 落在 asar 外、不进入 packager 的 buildPath，故 @electron/rebuild 的扫描
+  // 范围仅 resources/app（prune 后无原生模块），无需也无法用 onlyModules 短路（空数组经
+  // `|| null` 归一化后不改变 walker 行为）。dsh-dist 内原生模块全部随上游 prebuilt、按目标
+  // ABI 直接可用。
   makers: [
     // Windows：Squirrel 安装器（Electron Forge 无官方 NSIS maker）
     new MakerSquirrel({

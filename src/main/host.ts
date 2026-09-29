@@ -77,11 +77,15 @@ function findProfileBootEntry(): string | null {
   try {
     const candidates: { path: string; mtime: number }[] = [];
     for (const file of readdirSync(DSH_CLI_LIB)) {
-      if (!file.startsWith('profile-boot-') || !file.endsWith('.js')) continue;
+      // rc.2 起 tsdown 命名变化：薄入口为 profile-boot.js（无 hash），实现 chunk 为
+      // profile-boot-<hash>.js；旧版本二者相反。两种名称都纳入扫描。
+      if (!/^profile-boot(-.+)?\.js$/.test(file)) continue;
       const fullPath = join(DSH_CLI_LIB, file);
       const content = readFileSync(fullPath, 'utf8');
-      // 薄入口：`import { o as runProfile } from "./..."; export { runProfile };`
-      if (content.includes('export { runProfile') && content.length < 300) {
+      // 薄入口：仅从同级 chunk re-export（含 runProfile），体积小。tsdown 产物可能为
+      // 多导出且按字母排序（如 export { A, runProfile, Z }），用正则识别导出列表。
+      const reExportsRunProfile = /export\s*\{[^}]*\brunProfile\b[^}]*\}/.test(content);
+      if (reExportsRunProfile && content.length < 600) {
         candidates.push({ path: fullPath, mtime: statSync(fullPath).mtimeMs });
       }
     }

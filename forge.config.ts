@@ -11,6 +11,19 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    // dsh-dist 是 collect-dsh.mjs 经 pnpm deploy 物化的「部署就绪」产物，其 node_modules
+    // 已是精确裁剪过的依赖集合。packager 默认 prune=true 会用 galactus 再按各包 package.json
+    // 的 files/main/exports 二次裁剪 node_modules，对已编译的 dist 输出（如 resolve.exports 的
+    // dist/index.js / index.mjs）误删——曾导致 dsh Host 启动时 ERR_MODULE_NOT_FOUND 无法绑定
+    // webserver。故关闭 prune，让 extraResource 的 dsh-dist 逐字节原样拷贝。
+    prune: false,
+    // pnpm 用符号链接组织 node_modules/.pnpm；packager 默认 derefSymlinks=false 会在拷贝
+    // 时把符号链接再建成真符号链接——Windows 上需管理员/开发者模式，否则 EPERM 直接打包失败
+    // （"Preparing native dependencies" 阶段报 EPERM: operation not permitted, symlink）。
+    // 置 true 让 packager 把每个符号链接解引用为真实文件，产出扁平、无符号链接的 node_modules。
+    // 本应用自身唯一生产依赖 electron-squirrel-startup 是纯 JS 无原生模块，dsh-dist 走
+    // extraResource 单独拷贝（不经过此路径），故解引用安全。
+    derefSymlinks: true,
     // dsh-dist/ 与 runtime/ 必须排除在 app 源拷贝（→app.asar）之外：二者由下方 extraResource
     // 打入 asar 外的 resources/（host.ts 经 process.resourcesPath 以 file:// 动态 import）。
     // 若不排除，packager 会先把这两个目录（合计 ~1GB / 5.6 万文件）拷进 resources/app 打进

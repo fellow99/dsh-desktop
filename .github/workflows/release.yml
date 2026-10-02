@@ -8,7 +8,7 @@ on:
       dsh_ref:
         description: 'dsh checkout ref（tag / branch / commit）'
         required: false
-        default: 'dsh-v0.1.7-rc.2'
+        default: 'dsh-v0.2.0-rc.2'
       dsh_market_ref:
         description: 'dsh-market checkout ref（tag / branch / commit）'
         required: false
@@ -33,7 +33,7 @@ jobs:
       - name: Checkout dsh (sibling)
         shell: bash
         env:
-          DSH_REF: ${{ github.event.inputs.dsh_ref || 'dsh-v0.1.7-rc.2' }}
+          DSH_REF: ${{ github.event.inputs.dsh_ref || 'dsh-v0.2.0-rc.2' }}
         run: |
           git clone --depth 1 --branch "${DSH_REF}" \
             https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness

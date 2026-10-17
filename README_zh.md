@@ -280,6 +280,7 @@ npm run package
 - [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)（同级目录 `../deepseek-harness`）—— 被封装的宿主，其 `docs/` 目录含完整架构文档
 - [dsh-market](https://github.com/dsh-market/dsh-market)（同级目录 `../dsh-market`）—— 内置的可视化插件市场（npm 包 `dshmarket`），经 `collect-dsh.mjs` 打包
 - [opencode](https://github.com/sst/opencode)（桌面壳参考：`packages/desktop/`）—— 类似的「用 Electron 包装 agent harness」需求
+- [DSH Desktop 官网](https://fellow99.github.io/dsh-desktop-website/) —— 两个版本的实拍截图与架构说明
 
 ## 许可证
 

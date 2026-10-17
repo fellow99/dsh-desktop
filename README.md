@@ -275,6 +275,7 @@ This project, deepseek-harness (dsh), and dsh-market live in **sibling directori
 - [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) (sibling directory `../deepseek-harness`) — the wrapped host; its `docs/` directory contains full architecture docs
 - [dsh-market](https://github.com/dsh-market/dsh-market) (sibling directory `../dsh-market`) — the built-in visual plugin marketplace (npm package `dshmarket`), bundled via `collect-dsh.mjs`
 - [opencode](https://github.com/sst/opencode) (desktop shell reference: `packages/desktop/`) — a similar "wrap an agent harness with Electron" use case
+- [DSH Desktop website](https://fellow99.github.io/dsh-desktop-website/) — both editions, real device screenshots, and the architecture story in one page
 
 ## License
 

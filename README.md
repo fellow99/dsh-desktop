@@ -55,6 +55,8 @@ The native file picker reuses dsh's standard in-app directory browser (one of th
 | Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu and Fedora/RHEL |
 | macOS arm64 | `.dmg` · ZIP | **Unsigned** — Gatekeeper needs a manual allow |
 
+**HarmonyOS edition (2in1 / tablet)** lives in a separate repo — [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos): same shell architecture and the same unmodified Web UI, with the Electron runtime swapped for the Electron-on-HarmonyOS one. There is no consumer installer yet (AppGallery track).
+
 Everything here is local `npm run make` output: no signing, no notarization, no auto-update. If that matters to you, build it yourself — see [Development](#development).
 
 ## Compatibility

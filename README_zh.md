@@ -55,6 +55,8 @@
 | Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu 与 Fedora/RHEL |
 | macOS arm64 | `.dmg` · ZIP | **未签名** —— 需在 Gatekeeper 里手动放行 |
 
+**鸿蒙版（2in1 / 平板）**在独立仓库 —— [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos)：同一套外壳架构、同一套零改动 Web UI，只是把 Electron 运行时换成了 Electron-on-鸿蒙。目前尚无消费级安装包（走 AppGallery 通道）。
+
 以上全部是本地 `npm run make` 的产物：不签名、不公证、不自动更新。如果你在意这几点，就自己构建——见[开发](#开发)。
 
 ## 兼容矩阵

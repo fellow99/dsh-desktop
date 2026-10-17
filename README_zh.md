@@ -1,59 +1,91 @@
 [English](./README.md) | 中文
 
----
-
 # DSH Desktop
 
-> 基于 Electron 的 [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 桌面封装，提供深度桌面集成体验。
+> 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 而做的 Electron 外壳：运行**官方、零改动**的 dsh Web UI，覆盖 Windows / Linux / macOS。同时它也是「如何自己造一个 dsh 外壳」的参考实现。
 
-**当前状态**：✅ 脚手架与消费 dsh 已完成——主进程 `runProfile('desktop')` 挂起 dsh Host，渲染进程同源加载 dsh Web UI（托盘/通知等 MVP 能力待接入）。详见 [docs/000-产品概念设计.md](docs/000-产品概念设计.md)。
+<p align="center">
+  <img src="docs/images/home-light.png" alt="DSH Desktop 运行官方 dsh Web UI" width="100%">
+</p>
+<p align="center">
+  <sub><b>真机实拍，不是效果图。</b>外壳里跑的就是官方 dsh Web UI。该帧取自
+  <a href="https://github.com/fellow99/dsh-desktop-hos">鸿蒙版</a>（同一套外壳、同一套 Web UI、同一条数据面），
+  因为目前只有鸿蒙版有现成的设备实拍；桌面版加载的界面与此完全一致。</sub>
+</p>
 
----
+<p align="center">
+  <a href="https://github.com/fellow99/dsh-desktop/releases/latest"><img src="https://img.shields.io/badge/release-0.2.0-4D6BFE" alt="最新版本"></a>
+  <img src="https://img.shields.io/badge/dsh-dsh--v0.2.0--rc.2-7C5CFF" alt="dsh 版本">
+  <img src="https://img.shields.io/badge/Electron-43-47848F" alt="Electron 43">
+  <img src="https://img.shields.io/badge/Windows%20%7C%20Linux%20%7C%20macOS-4493F8" alt="平台">
+  <img src="https://img.shields.io/badge/license-MIT-2EA44F" alt="MIT">
+</p>
 
-## 这是什么
+**状态** `0.2.0` —— 三端打包已跑通；托盘、原生通知、原生窗口框、剪贴板图片粘贴、窗口状态记忆、F11 全部到位。**暂无自动更新、无代码签名、不进商店。**
 
-DeepSeek Harness（`dsh`）是 DeepSeek AI 开源的 agent harness（智能体框架），采用「一切皆插件」的架构，原生入口是 `dsh web`（浏览器 Web UI）。
+## 三个设计取舍
 
-本项目用 Electron 把 `dsh` 的 Web UI 装进原生桌面壳，补齐托盘、通知等桌面能力，界面功能完全沿用 dsh 标准前端，让 agent harness 像一个真正的桌面应用那样运行——**不是**「包一层 `dsh web` 指向 localhost」的粗壳，而是按 dsh 现有架构实现的一等公民桌面应用。
+整个工程只有这三条决定：
 
-## 核心设计
+| 取舍 | 含义 |
+|---|---|
+| **上游零改动** | 渲染进程同源加载 `dsh web` 自己的 SPA。只打三个幂等补丁，且都是 Electron 兼容开关（关 HMR、关原生目录选择器、关 onboarding 步骤）——不 fork，不重写界面。 |
+| **无 CORS、无鉴权、无自定义协议、无 IPC 载体** | dsh Host 跑在 **Electron 主进程内**，它的 webserver 在同一个端口上同时服务 `dist/` 与 `/api`。窗口只是一个指向 `http://127.0.0.1:<port>/` 的浏览器。 |
+| **Linux 是一等公民** | `.deb` 与 `.rpm` 与 Windows 安装器、macOS DMG 一起产出。多数 dsh 桌面壳只做 Windows/macOS。 |
 
-`dsh` 已完成 **Host/Client 分层**，且它的 webserver **同时服务 SPA dist 和 `/api`**。因此桌面壳采用**进程内 Host + webserver + localhost 同源数据面**：
+## 能力
+
+| 能力 | 状态 |
+|---|---|
+| 系统托盘（退出 / 唤回） | ✅ |
+| 原生通知（订阅 dsh 会话事件） | ✅ |
+| 原生窗口框（系统 min / max / close） | ✅ |
+| 剪贴板图片粘贴 | ✅ |
+| 窗口状态记忆（最大化 / 位置尺寸，重启恢复） | ✅ |
+| F11 全屏切换 | ✅ |
+| 全局快捷键 · 开机自启 · 多窗口 | ⏸ 暂缓 |
+
+原生文件选择沿用 dsh 自带的应用内目录浏览（三个补丁之一），不弹系统对话框。
+
+## 下载
+
+| 平台 | 制品 | 说明 |
+|---|---|---|
+| Windows x64 | [Setup.exe](https://github.com/fellow99/dsh-desktop/releases/latest) · 免安装 ZIP | Squirrel 安装器，**未签名** |
+| Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu 与 Fedora/RHEL |
+| macOS arm64 | `.dmg` · ZIP | **未签名** —— 需在 Gatekeeper 里手动放行 |
+
+以上全部是本地 `npm run make` 的产物：不签名、不公证、不自动更新。如果你在意这几点，就自己构建——见[开发](#开发)。
+
+## 兼容矩阵
+
+| 外壳版本 | dsh（上游 tag） | Electron | 平台 | 验证程度 |
+|---|---|---|---|---|
+| `0.2.0` | `dsh-v0.2.0-rc.2` | `43.0.0` | Windows x64 · Linux x64 · macOS arm64 | `npm run make` 已产出制品；运行时经 `npm start` 验证 |
+
+上游 dsh 处于 **developer preview**，会有破坏性变更。本外壳一次只钉一个 tag：升级意味着新增 `patches/<新 tag>/` 并改 `scripts/build-dsh.mjs` 里的钉点。
+
+## 它同时是一份参考实现
+
+多数 dsh 桌面壳是产品，这个工程被刻意写成了「标本」，方便你把可用的部分抄进自己的外壳：
+
+- `specs/` —— 已实现规格（host、窗口、托盘、通知、生命周期、preload、应用入口、desktop profile、插件市场）
+- `patches/dsh-v0.2.0-rc.2/` —— 三个补丁，每个都写清了原因
+- `AGENTS.md`、`docs/000-产品概念设计.md` —— 架构与工程约定
+- `scripts/build-dsh.mjs` · `collect-dsh.mjs` · `fetch-runtime.mjs` —— 可复现构建、产物收集、内置运行时通道
+
+## 工作原理
 
 ```
-┌─ Electron 主进程（Node.js，也承载 dsh Host）─────────────────┐
-│  runProfile('desktop', ['--port','0']) → { ctx, shutdown }    │
-│    ├─ webserver   ← 绑定 127.0.0.1:<空闲端口>，服务 dist + /api│
-│    ├─ apiProxy    ← RPC 网关                                  │
-│    └─ connection  ← 已把 /api + WebSocket 注册到 webserver     │
-│  就绪后 loadURL(`http://127.0.0.1:${ctx.webServer.port}/`)    │
-│  ┌─ Tray / Notification：订阅 ctx 的 session/event            │
-│  └─ 常规标题栏（系统原生 min/max/close）                     │
-└──────────────▲───────────────────────────────────────────────┘
-               │ （无窗口控制 IPC；渲染层走 HTTP/WS 同源） │
-┌──────────────┴───────────────────────────────────────────────┐
-│ 渲染进程：loadURL('http://127.0.0.1:<port>/')  ← 同源          │
-│   标准 dsh Web UI（WebApiClient：fetch /api + WS 事件流）      │
-└──────────────────────────────────────────────────────────────┘
+Electron 主进程（Node.js，同时托管 dsh Host）
+  runProfile('desktop', ['--port','0']) → { ctx, port, shutdown }
+    ├─ webserver   127.0.0.1:<空闲端口> —— 同时服务 dist 与 /api
+    ├─ apiProxy    RPC 网关
+    └─ connection  /api + WebSocket
+  渲染进程：loadURL('http://127.0.0.1:<port>/')   ← 同源
 ```
 
-关键点：**渲染进程同源加载 localhost，零 CORS、零鉴权、零自定义协议、零 IPC 载体**——复用 dsh 现有的 `WebApiClient`（HTTP 上行 + WebSocket 下行），**零上游改动**。
-
-## 计划中的 MVP 功能
-
-- ✅ 系统托盘（退出/唤回）
-- ✅ 原生通知
-- ✅ 常规 Windows 标题栏（系统原生 min/max/close）
-- ✅ 剪贴板图片粘贴
-- ✅ 窗口状态持久化（最大化/位置尺寸，重启恢复）
-- ✅ F11 全屏切换
-
-（暂缓：全局快捷键唤起、开机自启、多窗口；原生文件选择沿用 dsh 标准前端目录浏览）
-
-## 目标平台与分发
-
-- **平台**：Windows + Linux + macOS（Electron 三端通用；macOS 制品与 `make` 同流程产出）
-- **分发**：先本地打包自用（Electron Forge `make`）：Windows 出 Squirrel 安装器，macOS 出 DMG（依赖宿主 `hdiutil`，需在 macOS 机器上执行，见 `forge.config.ts`），Linux 出 deb/rpm，并为 `darwin`/`linux`/`win32` 出免安装 ZIP。暂不做自动更新、代码签名、商店分发
+没有 preload 桥、没有窗口控制通道：渲染进程直接用 dsh 既有的 `WebApiClient`（HTTP 上行 + WebSocket 下行）打同源接口。托盘与通知由主进程订阅 `ctx` 会话事件产生。
 
 ## 技术栈
 

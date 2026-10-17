@@ -1,59 +1,91 @@
 [中文](./README_zh.md) | English
 
----
-
 # DSH Desktop
 
-> An Electron-based desktop wrapper for [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness), providing deep desktop integration.
+> An Electron shell for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) that runs the **official, unmodified** dsh Web UI — on Windows, Linux and macOS. Also the reference implementation if you want to build your own shell.
 
-**Status**: ✅ Scaffold and dsh consumption complete — the main process runs `runProfile('desktop')` to host the dsh Host, and the renderer loads the dsh Web UI same-origin (tray/notification MVP capabilities pending). See [docs/000-产品概念设计.md](docs/000-产品概念设计.md) for details.
+<p align="center">
+  <img src="docs/images/home-light.png" alt="DSH Desktop running the official dsh Web UI" width="100%">
+</p>
+<p align="center">
+  <sub><b>Real capture — no mockup.</b> The official dsh Web UI inside the shell. This frame comes from the
+  <a href="https://github.com/fellow99/dsh-desktop-hos">HarmonyOS edition</a> (same shell, same Web UI, same data plane),
+  because it is the edition with a ready device shot; the desktop build loads the identical, unmodified UI.</sub>
+</p>
 
----
+<p align="center">
+  <a href="https://github.com/fellow99/dsh-desktop/releases/latest"><img src="https://img.shields.io/badge/release-0.2.0-4D6BFE" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/dsh-dsh--v0.2.0--rc.2-7C5CFF" alt="dsh version">
+  <img src="https://img.shields.io/badge/Electron-43-47848F" alt="Electron 43">
+  <img src="https://img.shields.io/badge/Windows%20%7C%20Linux%20%7C%20macOS-4493F8" alt="Platforms">
+  <img src="https://img.shields.io/badge/license-MIT-2EA44F" alt="MIT">
+</p>
 
-## What is this
+**Status** `0.2.0` — packaging works on all three platforms; tray, native notifications, native window frame, clipboard image paste, window-state persistence and F11 are in. **No auto-update, no code signing, no store distribution yet.**
 
-DeepSeek Harness (`dsh`) is an open-source agent harness by DeepSeek AI, built on an "everything is a plugin" architecture; its native entry is `dsh web` (a browser Web UI).
+## Why this shell
 
-This project wraps the dsh Web UI in a native desktop shell with Electron, adding desktop capabilities such as tray and notifications while fully reusing the dsh frontend — making the agent harness run like a first-class desktop app. It is **not** a thin "wrap `dsh web` pointing at localhost" shell, but a first-class desktop application built on dsh's existing architecture.
+Three decisions, and they are the whole design:
 
-## Core design
+| Decision | What it means |
+|---|---|
+| **Zero upstream changes** | The renderer loads `dsh web`'s own SPA same-origin. Only three idempotent patches are applied, all of them Electron-compatibility toggles (HMR off, native directory picker off, onboarding steps off) — no fork, no re-implementation of the UI. |
+| **No CORS, no auth dance, no custom protocol, no IPC carrier** | The dsh Host starts *inside the Electron main process*, and its webserver serves both `dist/` and `/api` on one bound port. The window is a browser pointed at `http://127.0.0.1:<port>/`. |
+| **Linux is a first-class target** | `.deb` and `.rpm` ship next to the Windows installer and the macOS DMG. Most dsh desktop shells stop at Windows/macOS. |
 
-`dsh` has completed its **Host/Client split**, and its webserver **serves both the SPA dist and `/api`**. The desktop shell therefore uses an **in-process Host + webserver + localhost same-origin data plane**:
+## Features
+
+| Capability | State |
+|---|---|
+| System tray (quit / restore) | ✅ |
+| Native notifications, subscribed to dsh session events | ✅ |
+| Native window frame (system min / max / close) | ✅ |
+| Clipboard image paste | ✅ |
+| Window state persistence (maximized / bounds restored) | ✅ |
+| F11 fullscreen | ✅ |
+| Global shortcut · launch at login · multiple windows | ⏸ deferred |
+
+The native file picker reuses dsh's standard in-app directory browser (one of the three patches), so no OS dialog is involved.
+
+## Download
+
+| Platform | Artifact | Notes |
+|---|---|---|
+| Windows x64 | [Setup.exe](https://github.com/fellow99/dsh-desktop/releases/latest) · portable ZIP | Squirrel installer, **unsigned** |
+| Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu and Fedora/RHEL |
+| macOS arm64 | `.dmg` · ZIP | **Unsigned** — Gatekeeper needs a manual allow |
+
+Everything here is local `npm run make` output: no signing, no notarization, no auto-update. If that matters to you, build it yourself — see [Development](#development).
+
+## Compatibility
+
+| Shell | dsh (upstream tag) | Electron | Platforms | Verified |
+|---|---|---|---|---|
+| `0.2.0` | `dsh-v0.2.0-rc.2` | `43.0.0` | Windows x64 · Linux x64 · macOS arm64 | artifacts produced by `npm run make`; runtime exercised via `npm start` |
+
+Upstream dsh is a **developer preview** and ships breaking changes. This shell pins one tag at a time: bumping it means adding `patches/<new-tag>/` and updating the pin in `scripts/build-dsh.mjs`.
+
+## Also a reference implementation
+
+Most dsh desktop shells are products. This one is deliberately documented like a specimen, so the working parts can be copied into your own shell:
+
+- `specs/` — as-built specs: host, window, tray, notifications, lifecycle, preload, app entry, desktop profile, plugin market
+- `patches/dsh-v0.2.0-rc.2/` — the three patches, each with its reason
+- `AGENTS.md`, `docs/000-产品概念设计.md` — architecture and working conventions
+- `scripts/build-dsh.mjs` · `collect-dsh.mjs` · `fetch-runtime.mjs` — reproducible build, artifact collection, bundled-runtime channel
+
+## How it works
 
 ```
-┌─ Electron main process (Node.js, also hosts dsh Host)──────────────┐
-│  runProfile('desktop', ['--port','0']) → { ctx, shutdown }          │
-│    ├─ webserver   ← bound to 127.0.0.1:<free port>, serves dist+/api│
-│    ├─ apiProxy    ← RPC gateway                                     │
-│    └─ connection  ← already registered /api + WebSocket on webserver│
-│  once ready: loadURL(`http://127.0.0.1:${ctx.webServer.port}/`)     │
-│  ┌─ Tray / Notification: subscribe to ctx session/event             │
-│  └─ Native window frame (system min/max/close)                     │
-└───────────────▲────────────────────────────────────────────────────┘
-                │ (no window-control bridge; renderer uses HTTP/WS)   │
-┌───────────────┴────────────────────────────────────────────────────┐
-│ Renderer: loadURL('http://127.0.0.1:<port>/')  ← same-origin        │
-│   standard dsh Web UI (WebApiClient: fetch /api + WS event stream)  │
-└─────────────────────────────────────────────────────────────────────┘
+Electron main process (Node.js, also hosts the dsh Host)
+  runProfile('desktop', ['--port','0']) → { ctx, port, shutdown }
+    ├─ webserver   127.0.0.1:<free port> — serves dist + /api
+    ├─ apiProxy    RPC gateway
+    └─ connection  /api + WebSocket
+  renderer: loadURL('http://127.0.0.1:<port>/')   ← same-origin
 ```
 
-Key point: **the renderer loads localhost same-origin — zero CORS, zero auth, zero custom protocol, zero IPC carrier** — reusing dsh's existing `WebApiClient` (HTTP uplink + WebSocket downlink), **zero upstream changes**.
-
-## Planned MVP features
-
-- ✅ System tray (quit / restore)
-- ✅ Native notifications
-- ✅ Native Windows title bar (system min/max/close)
-- ✅ Clipboard image paste
-- ✅ Window state persistence (maximized / bounds restored on restart)
-- ✅ F11 fullscreen toggle
-
-(Deferred: global shortcut, launch at login, multiple windows; native file picker reuses dsh's standard frontend directory browser)
-
-## Target platforms & distribution
-
-- **Platforms**: Windows + Linux + macOS (Electron runs on all three; macOS makers land in the same `make` run)
-- **Distribution**: local packaging for personal use (Electron Forge `make`): Squirrel installer for Windows, DMG for macOS (built with the host's native `hdiutil`, only runs on a macOS machine), deb/rpm for Linux, and a plain ZIP for `darwin`/`linux`/`win32` (see `forge.config.ts`). No auto-update, code signing, or store distribution yet
+No preload bridge, no window-control channel: the renderer uses dsh's existing `WebApiClient` (HTTP uplink + WebSocket downlink) against the same origin. Tray and notifications are produced in the main process by subscribing to `ctx` session events.
 
 ## Tech stack
 

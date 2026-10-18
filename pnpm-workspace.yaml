@@ -1,3 +1,12 @@
+# pnpm 11 默认开启 block-exotic-subdeps，会拒绝 @electron/rebuild 传递依赖的
+# @electron/node-gyp（git+https 解析）。该 build 的 pnpm 既不读取项目 .npmrc，
+# 也不识别 npm_config_* 环境变量，且 pnpm 11 起不再读取 package.json 的 pnpm 字段，
+# 因此只能用 overrides 把这条 git 依赖替换为 registry 同源构建。
+#
+# 版本取舍：npm 路径（CI / release 工作流用 npm ci）仍按 git commit 06b29aa 安装，
+# 其 package.json 声明的版本为 10.2.0-electron.1。此处取 registry 上的最新补丁
+# 10.2.0-electron.2；影响面仅限 electron-forge 打包期重建原生模块（@electron/rebuild），
+# 不进入最终产物（devDependency 链）。保持 package-lock.json 不变，npm 路径行为不受影响。
 packages:
   - "."
 overrides:

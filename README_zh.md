@@ -9,8 +9,8 @@
 </p>
 <p align="center">
   <sub><b>真机实拍，不是效果图。</b>外壳里跑的就是官方 dsh Web UI。该帧取自
-  <a href="https://github.com/fellow99/dsh-desktop-hos">鸿蒙版</a>（同一套外壳、同一套 Web UI、同一条数据面），
-  因为目前只有鸿蒙版有现成的设备实拍；桌面版加载的界面与此完全一致。</sub>
+  <a href="https://github.com/fellow99/dsh-desktop-hos">Electron on HarmonyOS Edition</a>（同一套外壳、同一套 Web UI、同一条数据面），
+  因为目前只有这个 edition 有现成的真机实拍；桌面版加载的界面与此完全一致。</sub>
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@
 | Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu 与 Fedora/RHEL |
 | macOS arm64 | `.dmg` · ZIP | **未签名** —— 需在 Gatekeeper 里手动放行 |
 
-**鸿蒙版（2in1 / 平板）**在独立仓库 —— [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos)：同一套外壳架构、同一套零改动 Web UI，只是把 Electron 运行时换成了 Electron-on-鸿蒙。目前尚无消费级安装包（走 AppGallery 通道）。
+**鸿蒙端（2in1 / 平板）有两个 edition，各在独立仓库。**[dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos) —— **Electron on HarmonyOS Edition**：同一套外壳架构、同一套零改动 Web UI，把 Electron 运行时换成 Electron-on-HarmonyOS；目前尚无消费级安装包（走 AppGallery 通道）。[dsh-desktop-ark](https://github.com/fellow99/dsh-desktop-ark) —— **HarmonyOS Edition**：保留同一套进程内 Host，但彻底去掉 Electron —— 由系统 ArkWeb 渲染界面、内嵌 Node 运行时（`ohos-node-bridge`）运行 dsh；当前为 v0.1.0 scaffold。
 
 以上全部是本地 `npm run make` 的产物：不签名、不公证、不自动更新。如果你在意这几点，就自己构建——见[开发](#开发)。
 
@@ -280,7 +280,7 @@ npm run package
 - [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)（同级目录 `../deepseek-harness`）—— 被封装的宿主，其 `docs/` 目录含完整架构文档
 - [dsh-market](https://github.com/dsh-market/dsh-market)（同级目录 `../dsh-market`）—— 内置的可视化插件市场（npm 包 `dshmarket`），经 `collect-dsh.mjs` 打包
 - [opencode](https://github.com/sst/opencode)（桌面壳参考：`packages/desktop/`）—— 类似的「用 Electron 包装 agent harness」需求
-- [DSH Desktop 官网](https://fellow99.github.io/dsh-desktop-website/) —— 两个版本的实拍截图与架构说明
+- [DSH Desktop 官网](https://fellow99.github.io/dsh-desktop-website/) —— 各 edition 的说明、真机实拍与架构讲解
 
 ## 许可证
 

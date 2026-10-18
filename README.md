@@ -9,7 +9,7 @@
 </p>
 <p align="center">
   <sub><b>Real capture — no mockup.</b> The official dsh Web UI inside the shell. This frame comes from the
-  <a href="https://github.com/fellow99/dsh-desktop-hos">HarmonyOS edition</a> (same shell, same Web UI, same data plane),
+  <a href="https://github.com/fellow99/dsh-desktop-hos">Electron on HarmonyOS Edition</a> (same shell, same Web UI, same data plane),
   because it is the edition with a ready device shot; the desktop build loads the identical, unmodified UI.</sub>
 </p>
 
@@ -55,7 +55,7 @@ The native file picker reuses dsh's standard in-app directory browser (one of th
 | Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu and Fedora/RHEL |
 | macOS arm64 | `.dmg` · ZIP | **Unsigned** — Gatekeeper needs a manual allow |
 
-**HarmonyOS edition (2in1 / tablet)** lives in a separate repo — [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos): same shell architecture and the same unmodified Web UI, with the Electron runtime swapped for the Electron-on-HarmonyOS one. There is no consumer installer yet (AppGallery track).
+**HarmonyOS editions (2in1 / tablet)** live in separate repos. [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos) — **Electron on HarmonyOS Edition** — shares this shell architecture and the same unmodified Web UI, with the Electron runtime swapped for the Electron-on-HarmonyOS one; there is no consumer installer yet (AppGallery track). [dsh-desktop-ark](https://github.com/fellow99/dsh-desktop-ark) — **HarmonyOS Edition** — keeps the same in-process Host but drops Electron: the system ArkWeb renders the UI while an embedded Node runtime (`ohos-node-bridge`) runs dsh; it is a v0.1.0 scaffold.
 
 Everything here is local `npm run make` output: no signing, no notarization, no auto-update. If that matters to you, build it yourself — see [Development](#development).
 
@@ -275,7 +275,7 @@ This project, deepseek-harness (dsh), and dsh-market live in **sibling directori
 - [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) (sibling directory `../deepseek-harness`) — the wrapped host; its `docs/` directory contains full architecture docs
 - [dsh-market](https://github.com/dsh-market/dsh-market) (sibling directory `../dsh-market`) — the built-in visual plugin marketplace (npm package `dshmarket`), bundled via `collect-dsh.mjs`
 - [opencode](https://github.com/sst/opencode) (desktop shell reference: `packages/desktop/`) — a similar "wrap an agent harness with Electron" use case
-- [DSH Desktop website](https://fellow99.github.io/dsh-desktop-website/) — both editions, real device screenshots, and the architecture story in one page
+- [DSH Desktop website](https://fellow99.github.io/dsh-desktop-website/) — all three editions, real device screenshots, and the architecture story in one page
 
 ## License
 

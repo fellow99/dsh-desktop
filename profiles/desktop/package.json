@@ -2,7 +2,7 @@
   "name": "dsh-desktop-profile",
   "private": true,
   "dependencies": {
-    "dshmarket": "1.26.0"
+    "dshmarket": "1.67.0"
   },
   "dsh": {
     "profile": {

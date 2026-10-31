@@ -1,10 +1,10 @@
-> ⚠️ **变更（101-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/101-version-0.1.5/spec.md` 为准。
+> ⚠️ **变更（011-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/011-version-0.1.5/spec.md` 为准。
 
-# 006-preload 技术方案（As-Built）
+# 118-preload-bridge 技术方案（As-Built）
 
 > 本文档为「回溯性」技术方案，记录模块实际架构、设计决策与实现策略。
-> 模块：006-preload
-> 对应规格：specs/006-preload/spec.md
+> 模块：118-preload-bridge
+> 对应规格：specs/118-preload-bridge/spec.md
 > 最后更新：2026-08-14
 
 ## 1. 技术上下文
@@ -39,7 +39,7 @@
 - **`contextBridge.exposeInMainWorld` 模式**：在 contextIsolation 下把受限 API 桥接到渲染进程主世界，是 Electron 官方安全暴露标准。
 - **`ipcRenderer.invoke` + `ipcMain.handle` 配对**：异步请求-响应，返回 Promise，与主进程 `registerWindowIpcHandlers`（windows.ts）一一对应。
 - **为什么数据面不过 IPC**：dsh 的 `WebApiClient` 已实现同源 `fetch('/api')` 上行 + `WebSocket('/api/events.*')` 下行，复用即可；走 IPC 需新写载体插件，违背「零上游改动」。
-- **观察到的命名/行为细节**：`window.dsh.maximize()` 对应主进程 handler 的「切换」语义（`isMaximized ? unmaximize : maximize`），即方法名为 `maximize` 但实际是 toggle；查询实际状态用 `isMaximized()`。此为源码实际行为（对应 FR-006-003）。
+- **观察到的命名/行为细节**：`window.dsh.maximize()` 对应主进程 handler 的「切换」语义（`isMaximized ? unmaximize : maximize`），即方法名为 `maximize` 但实际是 toggle；查询实际状态用 `isMaximized()`。此为源码实际行为（对应 FR-118-003）。
 - **`close` 的连带行为**：`window.dsh.close()` 触发窗口 `close` 事件，关窗即退出（由入口模块的 `window-all-closed` 触发应用退出，行为归属窗口/入口模块，preload 仅触发）。
 
 ## 4. 数据模型
@@ -116,8 +116,8 @@ export type DshApi = typeof api; // { minimize; maximize; close; isMaximized }
 
 | 技术决策 | 对应规格需求 |
 |---|---|
-| `contextBridge.exposeInMainWorld('dsh', api)` 暴露 4 方法 | FR-006-001 |
-| `ipcRenderer.invoke` 返回 Promise | FR-006-002 |
-| `window:maximize` handler 的 toggle 语义 | FR-006-003 |
-| 仅窗口控制、无数据通道 | FR-006-004、FR-006-005 |
-| preload 对窗口所有页面生效（含 localhost 宿主 UI） | FR-006-006 |
+| `contextBridge.exposeInMainWorld('dsh', api)` 暴露 4 方法 | FR-118-001 |
+| `ipcRenderer.invoke` 返回 Promise | FR-118-002 |
+| `window:maximize` handler 的 toggle 语义 | FR-118-003 |
+| 仅窗口控制、无数据通道 | FR-118-004、FR-118-005 |
+| preload 对窗口所有页面生效（含 localhost 宿主 UI） | FR-118-006 |

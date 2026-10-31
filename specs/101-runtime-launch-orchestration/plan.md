@@ -1,9 +1,9 @@
-> ⚠️ **变更（101-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/101-version-0.1.5/spec.md` 为准。
+> ⚠️ **变更（011-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/011-version-0.1.5/spec.md` 为准。
 
-# 007-app-entry 技术方案（As-Built）
+# 101-runtime-launch-orchestration 技术方案（As-Built）
 
 > 本文档是对实际架构、设计决策与实现策略的回顾性技术方案。
-> Module: 007-app-entry（应用入口编排）
+> Module: 101-runtime-launch-orchestration（应用入口编排）
 > Corresponding spec: [spec.md](./spec.md)
 > Last Updated: 2026-08-14
 
@@ -35,9 +35,9 @@
 | 进程内 Host（MVP） | ✅ | `startHost()` 在主进程内调用，`host` 句柄由入口持有 |
 | 只写装配代码 | ✅ | 入口仅按序调用各模块，不含能力实现 |
 | 同源数据面 | ✅ | 通过 `host.url`（`http://127.0.0.1:<port>/`）交给窗口模块加载 |
-| 单实例锁 | ✅ | `app.requestSingleInstanceLock()`，失败即 `app.quit()`（实现 FR-007-001） |
-| 关窗退出 | ✅ | `window-all-closed` → `app.quit()`（实现 FR-007-011） |
-| 优雅关闭 | ✅ | `before-quit` → `host?.shutdown()` + `destroyTray()`（实现 FR-007-012） |
+| 单实例锁 | ✅ | `app.requestSingleInstanceLock()`，失败即 `app.quit()`（实现 FR-101-001） |
+| 关窗退出 | ✅ | `window-all-closed` → `app.quit()`（实现 FR-101-011） |
+| 优雅关闭 | ✅ | `before-quit` → `host?.shutdown()` + `destroyTray()`（实现 FR-101-012） |
 | TypeScript strict / 无 as any | ✅ | 无类型压制；electron-squirrel-startup 以静态 import 引入（类型声明于 src/electron-squirrel-startup.d.ts） |
 | 严禁空 catch | ✅ | 入口无 try/catch |
 
@@ -97,10 +97,10 @@
 
 | 事件 | 来源 | 处理 |
 |---|---|---|
-| `second-instance` | electron app | 还原/显示/聚焦主窗口（FR-007-002） |
-| `activate` | electron app | 无窗口时重建主窗口（FR-007-010） |
-| `window-all-closed` | electron app | `app.quit()`，关窗即退出（FR-007-011） |
-| `before-quit` | electron app | `host?.shutdown()` + `destroyTray()`（FR-007-012） |
+| `second-instance` | electron app | 还原/显示/聚焦主窗口（FR-101-002） |
+| `activate` | electron app | 无窗口时重建主窗口（FR-101-010） |
+| `window-all-closed` | electron app | `app.quit()`，关窗即退出（FR-101-011） |
+| `before-quit` | electron app | `host?.shutdown()` + `destroyTray()`（FR-101-012） |
 
 ## 6. Implementation Strategy
 

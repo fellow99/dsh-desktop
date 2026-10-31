@@ -1,6 +1,6 @@
-# 008-desktop-profile 模块规格
+# 105-upstream-adapter-bundle 模块规格
 
-> Module: 008-desktop-profile（desktop profile）
+> Module: 105-upstream-adapter-bundle（desktop profile）
 > Status: Implemented
 > Last Updated: 2026-08-14
 
@@ -40,14 +40,14 @@
 
 ### 3.1 组合声明
 
-- FR-008-001：系统 MUST 声明一个 `desktop` profile，其插件组合为基础面（dsh-base）与浏览器面（dsh-web-app）两个 bundle。
-- FR-008-002：系统 MUST 将组合声明为可被宿主的 profile 机制发现并加载的形式（随包分发）。
+- FR-105-001：系统 MUST 声明一个 `desktop` profile，其插件组合为基础面（dsh-base）与浏览器面（dsh-web-app）两个 bundle。
+- FR-105-002：系统 MUST 将组合声明为可被宿主的 profile 机制发现并加载的形式（随包分发）。
 
 ### 3.2 行为微调
 
-- FR-008-003：系统 MUST 关闭 web-runtime 的 URL 打印行为（桌面应用无需打印「dsh web: http://...」）。
-- FR-008-004：系统 MUST 在覆盖 URL 打印时保持 web-runtime 的其它配置项（surfaceContext、trustedHosts）原值不变。
-- FR-008-005：系统 SHOULD 保持 webserver 端口由启动代码注入（`--port 0` 由 OS 分配空闲端口），不在 profile 层写死端口。
+- FR-105-003：系统 MUST 关闭 web-runtime 的 URL 打印行为（桌面应用无需打印「dsh web: http://...」）。
+- FR-105-004：系统 MUST 在覆盖 URL 打印时保持 web-runtime 的其它配置项（surfaceContext、trustedHosts）原值不变。
+- FR-105-005：系统 SHOULD 保持 webserver 端口由启动代码注入（`--port 0` 由 OS 分配空闲端口），不在 profile 层写死端口。
 
 ## 4. Key Entities
 

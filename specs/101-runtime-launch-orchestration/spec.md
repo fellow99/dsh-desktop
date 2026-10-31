@@ -1,8 +1,8 @@
-> ⚠️ **变更（101-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/101-version-0.1.5/spec.md` 为准。
+> ⚠️ **变更（011-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/011-version-0.1.5/spec.md` 为准。
 
-# 007-app-entry 模块规格
+# 101-runtime-launch-orchestration 模块规格
 
-> Module: 007-app-entry（应用入口编排）
+> Module: 101-runtime-launch-orchestration（应用入口编排）
 > Status: Implemented
 > Last Updated: 2026-08-14
 
@@ -51,30 +51,30 @@
 
 ### 3.1 单实例
 
-- FR-007-001：系统 MUST 在进程启动最早阶段申请单实例锁；获取失败时 MUST 立即退出进程。
-- FR-007-002：系统 MUST 在第二实例启动时，唤醒并聚焦已有实例的主窗口（最小化则先还原）。
+- FR-101-001：系统 MUST 在进程启动最早阶段申请单实例锁；获取失败时 MUST 立即退出进程。
+- FR-101-002：系统 MUST 在第二实例启动时，唤醒并聚焦已有实例的主窗口（最小化则先还原）。
 
 ### 3.2 安装器短生命周期处理
 
-- FR-007-003：系统 MUST 在入口最前识别安装器（Squirrel.Windows）触发的安装/卸载事件，并立即退出进程，不进入正常启动流程。
+- FR-101-003：系统 MUST 在入口最前识别安装器（Squirrel.Windows）触发的安装/卸载事件，并立即退出进程，不进入正常启动流程。
 
 ### 3.3 启动前安全准备
 
-- FR-007-004：系统 MUST 在窗口创建之前完成启动前安全准备（系统证书合并、loopback 代理豁免、崩溃兜底注册）。
+- FR-101-004：系统 MUST 在窗口创建之前完成启动前安全准备（系统证书合并、loopback 代理豁免、崩溃兜底注册）。
 
 ### 3.4 启动编排
 
-- FR-007-005：系统 MUST 在应用就绪后、创建窗口前，设置 Windows 原生通知所需的 AppUserModelID。
-- FR-007-006：系统 MUST 在创建窗口前注册窗口控制 IPC 处理器。
-- FR-007-007：系统 MUST 先启动宿主并取得其句柄，再据此创建主窗口。
-- FR-007-008：系统 MUST 在宿主不可用（未接入/启动失败）时加载兜底页，不阻塞应用启动。
-- FR-007-009：系统 MUST 仅在宿主可用（可提供宿主上下文）时才装配托盘与通知。
-- FR-007-010：系统 MUST 在应用被重新激活且无任何窗口时，重新创建主窗口。
+- FR-101-005：系统 MUST 在应用就绪后、创建窗口前，设置 Windows 原生通知所需的 AppUserModelID。
+- FR-101-006：系统 MUST 在创建窗口前注册窗口控制 IPC 处理器。
+- FR-101-007：系统 MUST 先启动宿主并取得其句柄，再据此创建主窗口。
+- FR-101-008：系统 MUST 在宿主不可用（未接入/启动失败）时加载兜底页，不阻塞应用启动。
+- FR-101-009：系统 MUST 仅在宿主可用（可提供宿主上下文）时才装配托盘与通知。
+- FR-101-010：系统 MUST 在应用被重新激活且无任何窗口时，重新创建主窗口。
 
 ### 3.5 生命周期
 
-- FR-007-011：系统 MUST 在全部窗口关闭后退出进程（关窗即退出，触发 before-quit 优雅关闭 dsh Host）。
-- FR-007-012：系统 MUST 在退出前执行优雅关闭：关闭宿主、销毁托盘。
+- FR-101-011：系统 MUST 在全部窗口关闭后退出进程（关窗即退出，触发 before-quit 优雅关闭 dsh Host）。
+- FR-101-012：系统 MUST 在退出前执行优雅关闭：关闭宿主、销毁托盘。
 
 ## 4. Key Entities
 

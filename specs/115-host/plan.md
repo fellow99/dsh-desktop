@@ -1,7 +1,7 @@
-# 001-host 技术方案（As-Built）
+# 115-host 技术方案（As-Built）
 
 > 本文档为回溯式技术方案，记录 Host 宿主模块的**实际**架构、设计决策与实现策略。
-> Module: 001-host
+> Module: 115-host
 > 对应规格: [spec.md](./spec.md)
 > Last Updated: 2026-08-14
 
@@ -32,7 +32,7 @@
 | 架构：零上游改动 | ✅ | 复用 `runProfile` / webserver 路由，无 fork、无新载体 |
 | 架构：进程内 Host（MVP） | ✅ | `startHost()` 设计为在主进程内 `runProfile('desktop')` |
 | 架构：只写装配代码 | ✅ | 仅封装 `runProfile` + 读端口 + 拼 URL，无业务逻辑 |
-| 架构：同源数据面 | ✅ | `url = http://127.0.0.1:<port>/`（实现 FR-001-005） |
+| 架构：同源数据面 | ✅ | `url = http://127.0.0.1:<port>/`（实现 FR-115-005） |
 | 安全：只绑回环地址 | ✅ | webserver 绑定 `127.0.0.1`，不对外暴露 |
 | 代码质量：TypeScript strict / 无 as any | ✅ | 仅定义最小接口 `HostContext` / `HostHandle`，无类型压制 |
 | 代码质量：源码即真理 | ✅ | dsh 引用均标注源码文件+行号（profile-boot.ts:207 等） |
@@ -149,7 +149,7 @@ startHost() ──(脚手架)──→ null
 ### 6.2 关键算法
 
 - **就绪判定**：`await runProfile(...)` 完成后即视为就绪（`ctx.webServer.port` 已可用）；无轮询、无超时重试。
-- **URL 构造**：模板字符串 `http://127.0.0.1:${port}/`（实现 FR-001-005）。
+- **URL 构造**：模板字符串 `http://127.0.0.1:${port}/`（实现 FR-115-005）。
 
 ### 6.3 错误处理
 
@@ -180,11 +180,11 @@ startHost() ──(脚手架)──→ null
 
 | 规格需求 | 实现位置 |
 |----------|----------|
-| FR-001-001（统一启动入口） | `startHost()`（host.ts:54） |
-| FR-001-002（空闲端口） | `args: ['--port', '0']` + 读 `ctx.webServer.port`（TODO 注释） |
-| FR-001-003（desktop profile） | TODO 注释第 2 步（profiles/desktop） |
-| FR-001-004（返回句柄） | `HostHandle` 接口（host.ts:22-30） |
-| FR-001-005（同源 URL） | `url: http://127.0.0.1:${port}/`（host.ts:29 注释 / TODO） |
-| FR-001-006（事件订阅） | `HostContext.on`（host.ts:18） |
-| FR-001-007（优雅关闭） | `HostHandle.shutdown`（host.ts:25） |
-| FR-001-008（脚手架返回 null） | `startHost()` 函数体 `return null`（host.ts:54-56） |
+| FR-115-001（统一启动入口） | `startHost()`（host.ts:54） |
+| FR-115-002（空闲端口） | `args: ['--port', '0']` + 读 `ctx.webServer.port`（TODO 注释） |
+| FR-115-003（desktop profile） | TODO 注释第 2 步（profiles/desktop） |
+| FR-115-004（返回句柄） | `HostHandle` 接口（host.ts:22-30） |
+| FR-115-005（同源 URL） | `url: http://127.0.0.1:${port}/`（host.ts:29 注释 / TODO） |
+| FR-115-006（事件订阅） | `HostContext.on`（host.ts:18） |
+| FR-115-007（优雅关闭） | `HostHandle.shutdown`（host.ts:25） |
+| FR-115-008（脚手架返回 null） | `startHost()` 函数体 `return null`（host.ts:54-56） |

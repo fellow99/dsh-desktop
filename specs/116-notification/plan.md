@@ -1,8 +1,8 @@
-# 004-notification 技术方案（As-Built）
+# 116-notification 技术方案（As-Built）
 
-> 本文档是对 004-notification 模块实际架构、设计决策与实现策略的回顾性技术方案。
-> Module: 004-notification
-> 对应规格：specs/004-notification/spec.md
+> 本文档是对 116-notification 模块实际架构、设计决策与实现策略的回顾性技术方案。
+> Module: 116-notification
+> 对应规格：specs/116-notification/spec.md
 > Last Updated: 2026-08-14
 
 ## 1. 技术上下文
@@ -43,9 +43,9 @@
   - `agent/status`：`{ agent, status }`，`status ∈ 'idle' | 'running'`（代码注释已记录，但当前实现未订阅）。
   - `agent/error`：`{ agent, turn, step, error }`。
   - question 通知：host ctx 层无事件，唯一来源是 `apiProxy.events.mux` 流的 `question/requested` 帧（`packages/host/apiproxy/src/api/events.ts:74`）。
-- **触发策略决策**：`turn/end` 仅对 `completed` / `error` 弹通知，其余 `reason.kind`（aborted/blocked/max-tokens/interrupted）静默——避免非关键结束产生噪音（实现 FR-004-003）。
-- **事件载荷占位**：`SessionEventLike` 为最小结构占位，`switch (e.type)` 匹配 `'turn/end'` / `'approval/asked'`，其余 `default` 静默（实现 FR-004-001/002/004）。
-- **Windows AppUserModelID**：Windows 原生通知需 `app.setAppUserModelId('com.fellow99.dsh.desktop')`（index.ts:42），在 `whenReady` 后、注册通知前设置（实现 FR-004-008 的平台侧支撑）。
+- **触发策略决策**：`turn/end` 仅对 `completed` / `error` 弹通知，其余 `reason.kind`（aborted/blocked/max-tokens/interrupted）静默——避免非关键结束产生噪音（实现 FR-116-003）。
+- **事件载荷占位**：`SessionEventLike` 为最小结构占位，`switch (e.type)` 匹配 `'turn/end'` / `'approval/asked'`，其余 `default` 静默（实现 FR-116-001/002/004）。
+- **Windows AppUserModelID**：Windows 原生通知需 `app.setAppUserModelId('com.fellow99.dsh.desktop')`（index.ts:42），在 `whenReady` 后、注册通知前设置（实现 FR-116-008 的平台侧支撑）。
 
 ## 4. 数据模型
 
@@ -76,7 +76,7 @@
 
 | 导出 | 签名 | 说明 |
 |---|---|---|
-| `setupNotifications` | `(ctx: HostContext) => void` | 注册 `session/event` 与 `agent/error` 订阅（实现 FR-004-001~006） |
+| `setupNotifications` | `(ctx: HostContext) => void` | 注册 `session/event` 与 `agent/error` 订阅（实现 FR-116-001~006） |
 
 ### 5.2 消费的接口（导入）
 
@@ -103,9 +103,9 @@
 
 ### 6.2 关键逻辑
 
-- `turn/end` 分支（notifications.ts:33-48）：读 `e.reason?.kind`，仅 `'completed'` / `'error'` 构造并 `show()` 通知，其余类型落入默认静默（实现 FR-004-001/002/003）。
-- `approval/asked` 分支（notifications.ts:49-58）：`e.data?.toolName` 存在则正文含工具名，否则通用文案（实现 FR-004-004/005）。
-- `agent/error` 分支（notifications.ts:64-69）：独立兜底通知（实现 FR-004-006）。
+- `turn/end` 分支（notifications.ts:33-48）：读 `e.reason?.kind`，仅 `'completed'` / `'error'` 构造并 `show()` 通知，其余类型落入默认静默（实现 FR-116-001/002/003）。
+- `approval/asked` 分支（notifications.ts:49-58）：`e.data?.toolName` 存在则正文含工具名，否则通用文案（实现 FR-116-004/005）。
+- `agent/error` 分支（notifications.ts:64-69）：独立兜底通知（实现 FR-116-006）。
 - 未使用参数以 `_` 前缀标记（`_session`、`_agent`、`_error`），满足 strict 无未使用参数告警。
 
 ### 6.3 错误处理
@@ -139,11 +139,11 @@
 
 | 需求 ID | 实现位置 |
 |---|---|
-| FR-004-001 | notifications.ts:36-40（`turn/end` + `completed`） |
-| FR-004-002 | notifications.ts:41-46（`turn/end` + `error`） |
-| FR-004-003 | notifications.ts:33-48（switch 仅 completed/error 弹通知，其余静默）+ default 分支 |
-| FR-004-004 | notifications.ts:49-58（`approval/asked`） |
-| FR-004-005 | notifications.ts:53-55（`toolName` 三元分支） |
-| FR-004-006 | notifications.ts:64-69（`agent/error`） |
-| FR-004-007 | index.ts:54-57（`if (host)` 守卫，仅宿主就绪后调用 `setupNotifications`） |
-| FR-004-008 | index.ts:42（`app.setAppUserModelId(...)`） |
+| FR-116-001 | notifications.ts:36-40（`turn/end` + `completed`） |
+| FR-116-002 | notifications.ts:41-46（`turn/end` + `error`） |
+| FR-116-003 | notifications.ts:33-48（switch 仅 completed/error 弹通知，其余静默）+ default 分支 |
+| FR-116-004 | notifications.ts:49-58（`approval/asked`） |
+| FR-116-005 | notifications.ts:53-55（`toolName` 三元分支） |
+| FR-116-006 | notifications.ts:64-69（`agent/error`） |
+| FR-116-007 | index.ts:54-57（`if (host)` 守卫，仅宿主就绪后调用 `setupNotifications`） |
+| FR-116-008 | index.ts:42（`app.setAppUserModelId(...)`） |

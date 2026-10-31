@@ -1,8 +1,8 @@
-# 003-tray 技术方案（As-Built）
+# 113-tray 技术方案（As-Built）
 
-> 本文档是对 003-tray 模块实际架构、设计决策与实现策略的回顾性技术方案。
-> Module: 003-tray
-> 对应规格：specs/003-tray/spec.md
+> 本文档是对 113-tray 模块实际架构、设计决策与实现策略的回顾性技术方案。
+> Module: 113-tray
+> 对应规格：specs/113-tray/spec.md
 > Last Updated: 2026-08-14
 
 ## 1. 技术上下文
@@ -37,9 +37,9 @@
 ## 3. 研究结论
 
 - **托盘 API 选型**：使用 Electron 内置 `Tray` + `Menu.buildFromTemplate`，无第三方托盘库。理由：需求极简（两菜单项 + 点击唤起），内置 API 足够且零依赖。
-- **唤起窗口的健壮性**：`showWindow` 先 `isMinimized()` 判空再 `restore()`，再 `show()` + `focus()`——覆盖「最小化」与「隐藏」两种状态（实现 FR-003-005）。
+- **唤起窗口的健壮性**：`showWindow` 先 `isMinimized()` 判空再 `restore()`，再 `show()` + `focus()`——覆盖「最小化」与「隐藏」两种状态（实现 FR-113-005）。
 - **占位图标决策**：脚手架阶段用 `nativeImage.createEmpty()` 生成空图标占位（tray.ts:11-12，注释 `TODO(资源)`），保证 `Tray` 可构造；真实图标后续放入 `resources/`。
-- **单例引用管理**：模块级 `let tray: Tray | null = null`，`createTray` 赋值、`destroyTray` 置 null，避免悬挂引用（实现 FR-003-008）。
+- **单例引用管理**：模块级 `let tray: Tray | null = null`，`createTray` 赋值、`destroyTray` 置 null，避免悬挂引用（实现 FR-113-008）。
 
 ## 4. 数据模型
 
@@ -66,8 +66,8 @@ tray = Tray 实例 ──destroyTray()──────▶ tray = null（应用
 
 | 导出 | 签名 | 说明 |
 |---|---|---|
-| `createTray` | `(mainWindow: BrowserWindow) => Tray` | 创建托盘 + 菜单 + 点击监听，返回 Tray 实例（实现 FR-003-001/003/004/005/006） |
-| `destroyTray` | `() => void` | 销毁托盘并置 null（实现 FR-003-008） |
+| `createTray` | `(mainWindow: BrowserWindow) => Tray` | 创建托盘 + 菜单 + 点击监听，返回 Tray 实例（实现 FR-113-001/003/004/005/006） |
+| `destroyTray` | `() => void` | 销毁托盘并置 null（实现 FR-113-008） |
 
 ### 5.2 消费的接口（导入）
 
@@ -80,9 +80,9 @@ tray = Tray 实例 ──destroyTray()──────▶ tray = null（应用
 
 | 事件 | 触发方 | 处理 |
 |---|---|---|
-| `tray.on('click')` | 用户点击托盘图标 | `showWindow()`：还原 + 显示 + 聚焦（实现 FR-003-004/005） |
-| 菜单「显示主窗口」click | 用户选择菜单项 | `showWindow()`（实现 FR-003-003/005） |
-| 菜单「退出」click | 用户选择菜单项 | `app.quit()`（实现 FR-003-006/007） |
+| `tray.on('click')` | 用户点击托盘图标 | `showWindow()`：还原 + 显示 + 聚焦（实现 FR-113-004/005） |
+| 菜单「显示主窗口」click | 用户选择菜单项 | `showWindow()`（实现 FR-113-003/005） |
+| 菜单「退出」click | 用户选择菜单项 | `app.quit()`（实现 FR-113-006/007） |
 
 ## 6. 实现策略
 
@@ -94,7 +94,7 @@ tray = Tray 实例 ──destroyTray()──────▶ tray = null（应用
 
 `showWindow`（tray.ts:15-19）：最小化判断 → 还原 → 显示 → 聚焦，四步保证窗口必被唤回并置于前台。
 
-`setToolTip`（tray.ts:21）：设置悬浮提示 `'DSH Desktop'`（实现 FR-003-002）。
+`setToolTip`（tray.ts:21）：设置悬浮提示 `'DSH Desktop'`（实现 FR-113-002）。
 
 ### 6.3 错误处理
 
@@ -123,11 +123,11 @@ tray = Tray 实例 ──destroyTray()──────▶ tray = null（应用
 
 | 需求 ID | 实现位置 |
 |---|---|
-| FR-003-001 | tray.ts:10-13（`createTray` → `new Tray`），由 index.ts:54-55 在宿主就绪后调用 |
-| FR-003-002 | tray.ts:21（`setToolTip`） |
-| FR-003-003 | tray.ts:24（菜单「显示主窗口」） |
-| FR-003-004 | tray.ts:34（`tray.on('click', showWindow)`） |
-| FR-003-005 | tray.ts:15-19（`showWindow`：restore + show + focus） |
-| FR-003-006 | tray.ts:26-30（菜单「退出」） |
-| FR-003-007 | tray.ts:28-30（`app.quit()`） |
-| FR-003-008 | tray.ts:38-41（`destroyTray`），由 index.ts:77 在 before-quit 调用 |
+| FR-113-001 | tray.ts:10-13（`createTray` → `new Tray`），由 index.ts:54-55 在宿主就绪后调用 |
+| FR-113-002 | tray.ts:21（`setToolTip`） |
+| FR-113-003 | tray.ts:24（菜单「显示主窗口」） |
+| FR-113-004 | tray.ts:34（`tray.on('click', showWindow)`） |
+| FR-113-005 | tray.ts:15-19（`showWindow`：restore + show + focus） |
+| FR-113-006 | tray.ts:26-30（菜单「退出」） |
+| FR-113-007 | tray.ts:28-30（`app.quit()`） |
+| FR-113-008 | tray.ts:38-41（`destroyTray`），由 index.ts:77 在 before-quit 调用 |

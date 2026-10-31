@@ -1,4 +1,4 @@
-> ⚠️ **变更（101-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/101-version-0.1.5/spec.md` 为准。
+> ⚠️ **变更（011-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/011-version-0.1.5/spec.md` 为准。
 
 # constitution.md — 宪法原则
 
@@ -44,3 +44,11 @@
 1. **Conventional Commits**：提交注释用 `git-commit` 技能规定的 type 前缀（feat/fix/docs/style/refactor/perf/test/build/ci/chore/revert），严禁其它前缀。
 2. **规范驱动**：开发遵循 `specs-based-devflow` 完整生命周期（规格 → 开发 → 审查 → 测试 → 修复 → 回归）。
 3. **代码审查**：每个任务完成后、合并前，用 `requesting-code-review` / `receiving-code-review` 审查。
+
+## 7. 规范编号与文档分工（继承父工程宪法）
+
+1. **0XX = 各子工程公共、共同的需求模块**：`011-version-<VERSION>`（版本更新，原 `101-version-*` 统一改号）、`012-building-workflow`（构建工作流）、`013-branding`（品牌化，原 `010-assets` 并入）。父工程承载同一编号的整体规范，本工程只写自己的实现。
+2. **1XX = 本工程基础功能模块**：编号以 `dsh-desktop-android` 为基准对齐；本工程现有 `101/103/105/113/114/115/116/118`，原 `001-008` 已迁移。
+3. **2XX = 补丁/插件模块**：与兄弟工程对齐；本工程为 `201-dsh-market`。
+4. **编号即契约**：目录名、`spec.md`/`plan.md` 的 `FR-*` 前缀、README 索引、SPECS_CHECKLIST 必须一致；新增/改号模块必须同时更新本文件与父工程索引。
+5. **文档分工**：父工程 `specs/` 关注整体规划、整体设计与各子工程共同需求；本工程 `specs/` 关注本工程具体技术实现与独立需求，不重复父工程的 overall 级内容。

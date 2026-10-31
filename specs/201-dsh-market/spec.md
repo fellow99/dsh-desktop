@@ -47,30 +47,30 @@ dsh-market 是一个前后端混合的 Cordis 插件（npm 包 `dshmarket`，当
 
 ### 3.1 版本更新
 
-- FR-001-001：系统 MUST 将本工程 `package.json` 的 `version` 由 `0.1.0` 更新为 `0.1.1`。
+- FR-201-001：系统 MUST 将本工程 `package.json` 的 `version` 由 `0.1.0` 更新为 `0.1.1`。
 
 ### 3.2 dsh-market 内置
 
-- FR-001-002：系统 MUST 构建 dsh-market（`npm install` + `npm run build`，产出 `lib/` 与 `client/`），并将其产物（`lib/`、`client/`、`cordis.patch.yml`、`package.json`，排除 node_modules）物化到 dsh 部署产物目录（开发态可解析路径 + 打包态 `dsh-dist/node_modules/dshmarket`）。
-- FR-001-003：系统 MUST 保证 dsh-market 的 peer 依赖（`@deepseek-ai/dsh-settings@^0.1.1-rc.2`、`@deepseek-ai/cordis`、`@deepseek-ai/schemastery`）已由 dsh-base/web-app 提供，无需额外安装。
+- FR-201-002：系统 MUST 构建 dsh-market（`npm install` + `npm run build`，产出 `lib/` 与 `client/`），并将其产物（`lib/`、`client/`、`cordis.patch.yml`、`package.json`，排除 node_modules）物化到 dsh 部署产物目录（开发态可解析路径 + 打包态 `dsh-dist/node_modules/dshmarket`）。
+- FR-201-003：系统 MUST 保证 dsh-market 的 peer 依赖（`@deepseek-ai/dsh-settings@^0.1.1-rc.2`、`@deepseek-ai/cordis`、`@deepseek-ai/schemastery`）已由 dsh-base/web-app 提供，无需额外安装。
 
 ### 3.3 自动加载
 
-- FR-001-004：系统 MUST 使 desktop profile 把 `dshmarket` 声明为 bundle（`dsh.profile.bundles` + `dependencies`），令 dsh-market 的 `cordis.patch.yml`（`- insert: [{id: dsh-market, name: dshmarket}]`）随组合被应用。
-- FR-001-005：系统 MUST 在 desktop profile 的 `cordis.patch.yml` 注入运行配置 `config: { profile: 'desktop', allowRestart: false }`，使市场操作正确的 profile 且不擅自重启桌面壳。
-- FR-001-006：系统 MUST 使 dsh-market 的浏览器端 bundle 经 `/plugins/dsh-market/client.js` 被服务（复用 dsh 现有 `dsh.client` 机制，双面插件：host 行 + `exports["./client"]`）。
+- FR-201-004：系统 MUST 使 desktop profile 把 `dshmarket` 声明为 bundle（`dsh.profile.bundles` + `dependencies`），令 dsh-market 的 `cordis.patch.yml`（`- insert: [{id: dsh-market, name: dshmarket}]`）随组合被应用。
+- FR-201-005：系统 MUST 在 desktop profile 的 `cordis.patch.yml` 注入运行配置 `config: { profile: 'desktop', allowRestart: false }`，使市场操作正确的 profile 且不擅自重启桌面壳。
+- FR-201-006：系统 MUST 使 dsh-market 的浏览器端 bundle 经 `/plugins/dsh-market/client.js` 被服务（复用 dsh 现有 `dsh.client` 机制，双面插件：host 行 + `exports["./client"]`）。
 
 ### 3.4 安装/删除/配置通道
 
-- FR-001-007：系统 MUST 在运行时让市场能 spawn `dsh plugin --profile desktop add|remove <target>`（复用 dsh 官方 pnpm 转发 + `reconcilePlugins`）。
-- FR-001-008：系统 MUST 内置并暴露 pnpm，使 `dsh plugin` 内部的 `spawnSync('pnpm', …)` 在开发态与打包态均能找到 pnpm。
-- FR-001-009：系统 MUST 内置并暴露 dsh CLI 的 Node 运行时，使 `dsh plugin` 命令（`dsh-dist/lib/bin.js`）可执行。
-- FR-001-010：系统 MUST 在 dsh Host 启动前完成 PATH 注入，使市场 `dshArgv()`（回退 PATH `dsh`）与 `dsh plugin` 的 pnpm 均能解析。
+- FR-201-007：系统 MUST 在运行时让市场能 spawn `dsh plugin --profile desktop add|remove <target>`（复用 dsh 官方 pnpm 转发 + `reconcilePlugins`）。
+- FR-201-008：系统 MUST 内置并暴露 pnpm，使 `dsh plugin` 内部的 `spawnSync('pnpm', …)` 在开发态与打包态均能找到 pnpm。
+- FR-201-009：系统 MUST 内置并暴露 dsh CLI 的 Node 运行时，使 `dsh plugin` 命令（`dsh-dist/lib/bin.js`）可执行。
+- FR-201-010：系统 MUST 在 dsh Host 启动前完成 PATH 注入，使市场 `dshArgv()`（回退 PATH `dsh`）与 `dsh plugin` 的 pnpm 均能解析。
 
 ### 3.5 配置与持久化
 
-- FR-001-011：系统 MUST 支持插件开关（启用/禁用）与主题切换，选择持久化到 profile 的 `cordis.patch.yml` 与市场 state.json，跨重启保留。
-- FR-001-012：系统 MUST 接受「HMR 被禁 → 热开关/免重启安装退化为重启后生效」的降级行为（桌面关窗即退、重开即生效）。
+- FR-201-011：系统 MUST 支持插件开关（启用/禁用）与主题切换，选择持久化到 profile 的 `cordis.patch.yml` 与市场 state.json，跨重启保留。
+- FR-201-012：系统 MUST 接受「HMR 被禁 → 热开关/免重启安装退化为重启后生效」的降级行为（桌面关窗即退、重开即生效）。
 
 ## 4. 关键实体
 
@@ -155,8 +155,8 @@ dsh-market 是一个前后端混合的 Cordis 插件（npm 包 `dshmarket`，当
 
 **下游（消费本模块）**：
 
-- `008-desktop-profile`：本模块扩展其 `dsh.profile.bundles` 与 `cordis.patch.yml`。
-- `001-host`（`startHost`）：本模块在宿主启动前注入 PATH 并暴露 dsh CLI/pnpm。
+- `105-upstream-adapter-bundle`：本模块扩展其 `dsh.profile.bundles` 与 `cordis.patch.yml`。
+- `115-host`（`startHost`）：本模块在宿主启动前注入 PATH 并暴露 dsh CLI/pnpm。
 - 构建脚本（`build-dsh.mjs` / `collect-dsh.mjs`）：本模块扩展其收集 dsh-market 产物与便携运行时。
 
 ## 9. 实现与调试记录（As-built）

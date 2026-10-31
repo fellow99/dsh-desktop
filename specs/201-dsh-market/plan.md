@@ -157,12 +157,12 @@
 
 | 规格需求 | 实现位置 |
 |----------|----------|
-| FR-001-001（版本 0.1.1） | `package.json` version |
-| FR-001-002/003（内置与依赖） | `fetch-runtime`/`collect-dsh` 扩展 + dshmarket 物化 |
-| FR-001-004/005（bundle + config 注入） | `profiles/desktop/package.json` + `cordis.patch.yml` |
-| FR-001-006（client bundle 服务） | dshmarket `dsh.client` + 物化 `client/` |
-| FR-001-007/008/009/010（安装通道） | `runtime.ts` + `dsh` shim + PATH + `dsh-dist/lib/bin.js` + pnpm |
-| FR-001-011/012（配置持久化、HMR 降级） | 市场自管 patch/state；`allowRestart:false` + `DSH_DISABLE_HMR` |
+| FR-201-001（版本 0.1.1） | `package.json` version |
+| FR-201-002/003（内置与依赖） | `fetch-runtime`/`collect-dsh` 扩展 + dshmarket 物化 |
+| FR-201-004/005（bundle + config 注入） | `profiles/desktop/package.json` + `cordis.patch.yml` |
+| FR-201-006（client bundle 服务） | dshmarket `dsh.client` + 物化 `client/` |
+| FR-201-007/008/009/010（安装通道） | `runtime.ts` + `dsh` shim + PATH + `dsh-dist/lib/bin.js` + pnpm |
+| FR-201-011/012（配置持久化、HMR 降级） | 市场自管 patch/state；`allowRestart:false` + `DSH_DISABLE_HMR` |
 
 ## 10. 实现偏差与调试记录（As-built）
 

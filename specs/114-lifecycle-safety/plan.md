@@ -1,8 +1,8 @@
-# 005-lifecycle 技术方案（As-Built）
+# 114-lifecycle-safety 技术方案（As-Built）
 
 > 本文档为「回溯性」技术方案，记录模块实际架构、设计决策与实现策略。
-> 模块：005-lifecycle
-> 对应规格：specs/005-lifecycle/spec.md
+> 模块：114-lifecycle-safety
+> 对应规格：specs/114-lifecycle-safety/spec.md
 > 最后更新：2026-08-14
 
 ## 1. 技术上下文
@@ -37,8 +37,8 @@
 
 - **参考实现**：opencode desktop 主进程（`packages/desktop/src/main/index.ts`）的 NO_PROXY / CA / 崩溃观测模式，本模块为对应映射。
 - **proxy-bypass-list `<-loopback>`**：Chromium 命令行开关，`<-loopback>` 是「排除 loopback 之外的规则」的内建值，使渲染进程对 loopback 直连。
-- **证书合并为何用动态 `require` + 运行时守卫**：`node:tls` 的 `getCACertificates`/`setDefaultCACertificates` 在类型定义中可能缺失（较新 API），且旧 Node 运行时不存在该函数。用 `typeof === 'function'` 守卫保证「能力缺失时降级跳过」，对应 FR-005-004。
-- **NO_PROXY 大小写双键**：不同平台/工具读取 `NO_PROXY`（大写）或 `no_proxy`（小写），二者均需注入以保证兼容（FR-005-001）。
+- **证书合并为何用动态 `require` + 运行时守卫**：`node:tls` 的 `getCACertificates`/`setDefaultCACertificates` 在类型定义中可能缺失（较新 API），且旧 Node 运行时不存在该函数。用 `typeof === 'function'` 守卫保证「能力缺失时降级跳过」，对应 FR-114-004。
+- **NO_PROXY 大小写双键**：不同平台/工具读取 `NO_PROXY`（大写）或 `no_proxy`（小写），二者均需注入以保证兼容（FR-114-001）。
 
 ## 4. 数据模型
 
@@ -79,12 +79,12 @@
 
 ### 6.2 关键算法
 
-- **代理豁免合并**（对应 FR-005-001/002）：拆分 → 归一化（trim + 去空）→ 集合并集 → 回写。
-- **证书合并**（对应 FR-005-003/004）：`Set([...getCACertificates('default'), ...getCACertificates('system')])` → `setDefaultCACertificates([...certs])`。
+- **代理豁免合并**（对应 FR-114-001/002）：拆分 → 归一化（trim + 去空）→ 集合并集 → 回写。
+- **证书合并**（对应 FR-114-003/004）：`Set([...getCACertificates('default'), ...getCACertificates('system')])` → `setDefaultCACertificates([...certs])`。
 
 ### 6.3 错误处理
 
-- 证书合并：能力缺失时 `if` 守卫直接跳过，不抛错、不中断（FR-005-004）。
+- 证书合并：能力缺失时 `if` 守卫直接跳过，不抛错、不中断（FR-114-004）。
 - 崩溃兜底：`console.error('[dsh-desktop] uncaughtException:' / 'unhandledRejection:')` 记录（TODO 接入日志框架后替换 console）。
 
 ### 6.4 性能
@@ -108,10 +108,10 @@
 
 | 技术决策 | 对应规格需求 |
 |---|---|
-| NO_PROXY 双键合并 + 去重（`ensureLoopbackNoProxy`） | FR-005-001 |
-| Chromium `proxy-bypass-list <-loopback>` | FR-005-002 |
-| `getCACertificates`/`setDefaultCACertificates` 合并 default+system | FR-005-003 |
-| 运行时守卫降级跳过 | FR-005-004 |
-| `process.on('uncaughtException')` 记录 | FR-005-005 |
-| `process.on('unhandledRejection')` 记录 | FR-005-006 |
-| `[dsh-desktop]` 前缀区分来源 | FR-005-007 |
+| NO_PROXY 双键合并 + 去重（`ensureLoopbackNoProxy`） | FR-114-001 |
+| Chromium `proxy-bypass-list <-loopback>` | FR-114-002 |
+| `getCACertificates`/`setDefaultCACertificates` 合并 default+system | FR-114-003 |
+| 运行时守卫降级跳过 | FR-114-004 |
+| `process.on('uncaughtException')` 记录 | FR-114-005 |
+| `process.on('unhandledRejection')` 记录 | FR-114-006 |
+| `[dsh-desktop]` 前缀区分来源 | FR-114-007 |

@@ -1,8 +1,8 @@
-> ⚠️ **变更（101-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/101-version-0.1.5/spec.md` 为准。
+> ⚠️ **变更（011-version-0.1.5，2026-09-13）**：窗口已改为**常规 Windows 标题栏（`frame:true`）**；已移除自定义窗口控制 IPC（`registerWindowIpcHandlers` / `window:*`）与 preload 的 `window.dsh`，并新增**主窗口状态持久化**与 **F11 全屏**。本文档为改造前的 as-built 记录；与当前代码不一致处，以 `src/main/windows.ts`、`src/main/window-state.ts`、`src/preload/index.ts` 及 `specs/011-version-0.1.5/spec.md` 为准。
 
 # 006 薄 IPC 桥 规格说明
 
-> 模块：006-preload（薄 IPC 桥）
+> 模块：118-preload-bridge（薄 IPC 桥）
 > 状态：Implemented（脚手架阶段已实现）
 > 最后更新：2026-08-14
 
@@ -33,18 +33,18 @@
 
 ### 3.1 窗口控制暴露
 
-- FR-006-001：系统 MUST 通过 preload 桥向渲染进程暴露窗口控制能力（最小化、最大化、关闭、查询最大化状态）。
-- FR-006-002：系统 MUST 保证每个窗口控制操作都有对应的主进程异步处理，并以异步方式（返回 Promise）交付结果。
-- FR-006-003：系统 MUST 使最大化操作支持切换语义（已最大化则还原，未最大化则最大化）。
+- FR-118-001：系统 MUST 通过 preload 桥向渲染进程暴露窗口控制能力（最小化、最大化、关闭、查询最大化状态）。
+- FR-118-002：系统 MUST 保证每个窗口控制操作都有对应的主进程异步处理，并以异步方式（返回 Promise）交付结果。
+- FR-118-003：系统 MUST 使最大化操作支持切换语义（已最大化则还原，未最大化则最大化）。
 
 ### 3.2 数据面隔离
 
-- FR-006-004：系统 MUST 保证业务数据（对话、文件等）不经过 IPC，而走同源的 HTTP + WebSocket 通道。
-- FR-006-005：系统 MUST 将 IPC 暴露面收敛到最小——仅壳层关注点，不向渲染进程暴露 Node 能力。
+- FR-118-004：系统 MUST 保证业务数据（对话、文件等）不经过 IPC，而走同源的 HTTP + WebSocket 通道。
+- FR-118-005：系统 MUST 将 IPC 暴露面收敛到最小——仅壳层关注点，不向渲染进程暴露 Node 能力。
 
 ### 3.3 作用域
 
-- FR-006-006：系统 MUST 使暴露的 API 对该窗口加载的所有页面（含宿主 Web UI 页面）可用。
+- FR-118-006：系统 MUST 使暴露的 API 对该窗口加载的所有页面（含宿主 Web UI 页面）可用。
 
 ## 4. 关键实体
 

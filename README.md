@@ -55,7 +55,7 @@ The native file picker reuses dsh's standard in-app directory browser (one of th
 | Linux x64 | `.deb` · `.rpm` · ZIP | Debian/Ubuntu and Fedora/RHEL |
 | macOS arm64 | `.dmg` · ZIP | **Unsigned** — Gatekeeper needs a manual allow |
 
-**HarmonyOS editions (2in1 / tablet)** live in separate repos. [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos) — **Electron on HarmonyOS Edition** — shares this shell architecture and the same unmodified Web UI, with the Electron runtime swapped for the Electron-on-HarmonyOS one; there is no consumer installer yet (AppGallery track). [dsh-desktop-ark](https://github.com/fellow99/dsh-desktop-ark) — **HarmonyOS Edition** — keeps the same in-process Host but drops Electron: the system ArkWeb renders the UI while an embedded Node runtime (`ohos-node-bridge`) runs dsh; it is a v0.1.0 scaffold.
+**HarmonyOS editions (2in1 / tablet)** live in separate repos. [dsh-desktop-hos](https://github.com/fellow99/dsh-desktop-hos) — **Electron on HarmonyOS Edition** — shares this shell architecture and the same unmodified Web UI, with the Electron runtime swapped for the Electron-on-HarmonyOS one; there is no consumer installer yet (AppGallery track). [dsh-desktop-ark](https://github.com/fellow99/dsh-desktop-ark) — **HarmonyOS Edition** — keeps the same in-process Host but drops Electron: the system ArkWeb renders the UI while an embedded Node runtime (`ohos-node-bridge`) runs dsh; it is 0.2.1, device-verified on HarmonyOS 6.1.0.135 (API 24).
 
 Everything here is local `npm run make` output: no signing, no notarization, no auto-update. If that matters to you, build it yourself — see [Development](#development).
 

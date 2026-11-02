@@ -12,12 +12,18 @@ import { fileURLToPath } from 'node:url';
 
 const desktopRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const dshRoot = resolve(desktopRoot, '../deepseek-harness');
-// 补丁按 dsh 版本分目录存放；当前构建基于 dsh dsh-v0.2.1-rc.2。
-const patchDir = resolve(desktopRoot, 'patches/dsh-v0.2.1-rc.2');
+// 补丁按 dsh 版本分目录存放；当前构建基于 dsh dsh-v0.2.1-rc.5。
+const patchDir = resolve(desktopRoot, 'patches/dsh-v0.2.1-rc.5');
 const patchFiles = [
   resolve(patchDir, 'dsh-disable-hmr.patch'),
   resolve(patchDir, 'dsh-disable-native-picker.patch'),
   resolve(patchDir, 'dsh-disable-welcome-notice.patch'),
+  // Electron 打包态锁了 RunAsNode fuse，process.execPath 不能重入为 Node runner；
+  // 该补丁让 Windows Job runner 在 Electron 下让位给上游直接 spawn 回退路径。
+  resolve(patchDir, 'dsh-subprocess-electron-fallback.patch'),
+  // Windows ACL 沙箱 runner 也必须由真实 Node 执行（无直接 spawn 等价物）；
+  // 该补丁让 runner 的 node 可执行文件接受 DSH_SANDBOX_NODE_EXECUTABLE 覆盖。
+  resolve(patchDir, 'dsh-sandbox-electron-node.patch'),
 ];
 
 // pnpm/tsdown 在无 TTY 时中止模块重建与依赖检查，故设 CI 使其自动处理

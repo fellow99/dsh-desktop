@@ -88,6 +88,11 @@
 | 变更影响范围 | `codegraph impact <符号名>` |
 | 索引状态 / 增量更新 | `codegraph status` / `codegraph sync` |
 
+### 3.3 索引自动更新（post-commit 钩子）——【强制】
+- 本工程已建立 `.codegraph/` 代码地图；git **`post-commit` 钩子**已安装，每次 commit 后自动 `codegraph sync` 增量更新索引。
+- 钩子非阻塞、失败只写日志（`logs/codegraph-sync.log`）、绝不阻断提交。
+- Agent 也应在大规模变更后手动 `codegraph sync` 保持索引新鲜。
+
 ---
 
 ## 四、产品/需求规划阶段（强制使用 `brainstorming` 技能）

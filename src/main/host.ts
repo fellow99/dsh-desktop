@@ -471,6 +471,16 @@ export async function startHost(): Promise<HostHandle | null> {
   // Electron 下不可用，禁用之（生产桌面壳无需用户 patch 热重载）。
   process.env.DSH_DISABLE_HMR = '1';
 
+  // RunAsNode fuse 关闭后 process.execPath 不能重入为 Node；Windows ACL 沙箱 runner
+  // 必须由真实 Node 执行，指向随包便携 Node（与市场通道共用 runtime/ 目录）。
+  if (process.platform === 'win32' && !process.env.DSH_SANDBOX_NODE_EXECUTABLE) {
+    const bundledNode = join(process.resourcesPath, 'runtime', 'node', 'node.exe');
+    if (existsSync(bundledNode)) {
+      process.env.DSH_SANDBOX_NODE_EXECUTABLE = bundledNode;
+      console.log(`[dsh-desktop] Windows ACL 沙箱 runner → ${bundledNode}`);
+    }
+  }
+
   try {
     // 动态 import dsh 的 ESM 编译产物（与 dsh CLI bin.js 的方式一致）；
     // 产物内部的 @deepseek-ai/* workspace 依赖由 Node 从 dsh 的 node_modules 解析。

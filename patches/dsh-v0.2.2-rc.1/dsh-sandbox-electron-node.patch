@@ -1,0 +1,23 @@
+diff --git a/packages/sandbox/sandbox-local/src/index.ts b/packages/sandbox/sandbox-local/src/index.ts
+index 45028746ff..6c36e5115c 100644
+--- a/packages/sandbox/sandbox-local/src/index.ts
++++ b/packages/sandbox/sandbox-local/src/index.ts
+@@ -571,12 +571,16 @@ export class LocalSandboxProvider extends SandboxProvider {
+   private windowsAclRunnerInvocation(): string[] {
+     const override = this.internals.windowsAclRunnerArgs
+     if (override !== undefined) return override
++    // Packaged Electron disables the RunAsNode fuse, so `process.execPath` cannot
++    // be re-invoked as a Node runner. The host sets DSH_SANDBOX_NODE_EXECUTABLE to
++    // a real bundled Node when available; process.execPath is the plain-runtime fallback.
++    const node = process.env.DSH_SANDBOX_NODE_EXECUTABLE ?? process.execPath
+     const builtEntry = this.internals.windowsAclRunnerEntry ?? fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-sandbox-windows-acl/runner'))
+-    if (existsSync(builtEntry)) return [process.execPath, builtEntry]
++    if (existsSync(builtEntry)) return [node, builtEntry]
+     const sourceEntry = fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-sandbox-windows-acl/src/runner.ts'))
+     const sourceConfig = fileURLToPath(new URL('../../../../tsconfig.base.json', import.meta.url))
+     const registration = `import { register } from ${JSON.stringify(import.meta.resolve('tsx/esm/api'))}; register({ tsconfig: ${JSON.stringify(sourceConfig)} });`
+-    return [process.execPath, '--import', `data:text/javascript,${encodeURIComponent(registration)}`, sourceEntry]
++    return [node, '--import', `data:text/javascript,${encodeURIComponent(registration)}`, sourceEntry]
+   }
+ }
+ 

@@ -1,0 +1,16 @@
+diff --git a/packages/subprocess/subprocess-local/src/windows-job.ts b/packages/subprocess/subprocess-local/src/windows-job.ts
+index 57f7c46afc..5a8cfe2e4e 100644
+--- a/packages/subprocess/subprocess-local/src/windows-job.ts
++++ b/packages/subprocess/subprocess-local/src/windows-job.ts
+@@ -55,6 +55,11 @@ function isWindowsStartCancellationError(error: SerializedRunnerError): boolean
+  * @returns whether the Windows native containment path is currently available.
+  */
+ export function probeWindowsJob(internals: WindowsJobInternals = {}): boolean {
++  // Packaged Electron disables the RunAsNode fuse, so `process.execPath` cannot be
++  // re-invoked as the Node subprocess runner that owns the Win32 Job handle.
++  // Fall back to the plain spawn path (same as macOS / Windows terminals), which
++  // spawns system executables directly without a runner.
++  if ('electron' in process.versions) return false
+   try {
+     const invocation = internals.runnerInvocation
+       ?? (internals.resolveRunnerInvocation ?? spawnRunnerInvocation)()

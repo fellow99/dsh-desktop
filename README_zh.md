@@ -63,7 +63,7 @@
 
 | 外壳版本 | dsh（上游 tag） | Electron | 平台 | 验证程度 |
 |---|---|---|---|---|
-| `0.2.2` | `dsh-v0.2.2-rc.1` | `43.0.0` | Windows x64 · Linux x64 · macOS arm64 | `npm run make` 已产出制品；运行时经 `npm start` 验证 |
+| `0.2.2` | `dsh-v0.2.2-rc.3` | `43.0.0` | Windows x64 · Linux x64 · macOS arm64 | `npm run make` 已产出制品；运行时经 `npm start` 验证 |
 
 上游 dsh 处于 **developer preview**，会有破坏性变更。本外壳一次只钉一个 tag：升级意味着新增 `patches/<新 tag>/` 并改 `scripts/build-dsh.mjs` 里的钉点。
 
@@ -72,7 +72,7 @@
 多数 dsh 桌面壳是产品，这个工程被刻意写成了「标本」，方便你把可用的部分抄进自己的外壳：
 
 - `specs/` —— 已实现规格（host、窗口、托盘、通知、生命周期、preload、应用入口、desktop profile、插件市场）
-- `patches/dsh-v0.2.2-rc.1/` —— 三个补丁，每个都写清了原因
+- `patches/dsh-v0.2.2-rc.3/` —— 三个补丁，每个都写清了原因
 - `AGENTS.md`、`docs/000-产品概念设计.md` —— 架构与工程约定
 - `scripts/build-dsh.mjs` · `collect-dsh.mjs` · `fetch-runtime.mjs` —— 可复现构建、产物收集、内置运行时通道
 
@@ -92,7 +92,7 @@ Electron 主进程（Node.js，同时托管 dsh Host）
 ## 技术栈
 
 - **Electron** + **Electron Forge**（脚手架与打包）
-- **deepseek-harness**（`dsh`，与本工程**同级目录**，非 submodule，引用路径 `../deepseek-harness`；消费方式为本地源码引用）—— 当前构建基于 **`dsh-v0.2.2-rc.1`**，其补丁位于 `patches/dsh-v0.2.2-rc.1/`
+- **deepseek-harness**（`dsh`，与本工程**同级目录**，非 submodule，引用路径 `../deepseek-harness`；消费方式为本地源码引用）—— 当前构建基于 **`dsh-v0.2.2-rc.3`**，其补丁位于 `patches/dsh-v0.2.2-rc.3/`
 - **dsh-market**（与本工程**同级目录**，引用路径 `../dsh-market`；内置的可视化插件市场，npm 包名 `dshmarket`）
 - **TypeScript**
 
@@ -122,20 +122,20 @@ npm run build:dsh   # ① git apply patches/ 三个补丁 → ② pnpm install�
 **前置条件——同级源码 checkout。** 本工程以同级目录（非 submodule）方式消费 `deepseek-harness` 与 `dsh-market`，构建前需把二者 clone 到本工程的同级目录：
 
 ```bash
-# dsh：锁定 tag = dsh-v0.2.2-rc.1（同时见 .github/workflows，与 patches/dsh-v0.2.2-rc.1/ 对应）
-git clone --branch dsh-v0.2.2-rc.1 https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
+# dsh：锁定 tag = dsh-v0.2.2-rc.3（同时见 .github/workflows，与 patches/dsh-v0.2.2-rc.3/ 对应）
+git clone --branch dsh-v0.2.2-rc.3 https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
 git clone --branch v1.26.0    https://github.com/dsh-market/dsh-market.git         ../dsh-market
 ```
 
 若缺少 `../dsh-market`，`collect-dsh.mjs` 会硬失败（打包产物需要把它物化为 `dsh-dist/node_modules/dshmarket`）；`build:dsh` 在缺少时仅告警并跳过市场构建。
 
-> **dsh 版本锚定**：本工程基于 deepseek-harness tag **`dsh-v0.2.2-rc.1`** 构建。补丁按 dsh 版本分目录存放（`patches/<dsh-tag>/`），`scripts/build-dsh.mjs` 固定指向 `patches/dsh-v0.2.2-rc.1/` —— 升级到新的 dsh tag 时，需新增对应的 `patches/<新 tag>/` 目录并更新该指向。
+> **dsh 版本锚定**：本工程基于 deepseek-harness tag **`dsh-v0.2.2-rc.3`** 构建。补丁按 dsh 版本分目录存放（`patches/<dsh-tag>/`），`scripts/build-dsh.mjs` 固定指向 `patches/dsh-v0.2.2-rc.3/` —— 升级到新的 dsh tag 时，需新增对应的 `patches/<新 tag>/` 目录并更新该指向。
 
 | 补丁 | 作用 |
 |---|---|
-| `patches/dsh-v0.2.2-rc.1/dsh-disable-hmr.patch` | 给 `runProfile` 加 `DSH_DISABLE_HMR` 开关，跳过 watch-only HMR（HMR 依赖 `--expose-internals`）|
-| `patches/dsh-v0.2.2-rc.1/dsh-disable-native-picker.patch` | 让 directory-picker 在 Electron 下强制用 browse（原生对话框 worker 用 electron.exe 启动失败）|
-| `patches/dsh-v0.2.2-rc.1/dsh-disable-welcome-notice.patch` | 移除客户端两步 `settings.onboarding`（版本化内测声明 + 官方 DeepSeek API Key 引导），首启直接进入应用；同步更新 `apply.client.spec.ts` 以匹配实际注册集 |
+| `patches/dsh-v0.2.2-rc.3/dsh-disable-hmr.patch` | 给 `runProfile` 加 `DSH_DISABLE_HMR` 开关，跳过 watch-only HMR（HMR 依赖 `--expose-internals`）|
+| `patches/dsh-v0.2.2-rc.3/dsh-disable-native-picker.patch` | 让 directory-picker 在 Electron 下强制用 browse（原生对话框 worker 用 electron.exe 启动失败）|
+| `patches/dsh-v0.2.2-rc.3/dsh-disable-welcome-notice.patch` | 移除客户端两步 `settings.onboarding`（版本化内测声明 + 官方 DeepSeek API Key 引导），首启直接进入应用；同步更新 `apply.client.spec.ts` 以匹配实际注册集 |
 
 > Electron 兼容根因：dsh 的 loader 经 `node-addon-require-builtin` 原生模块获取 Node 内部
 > ESM loader，该模块依赖 Electron V8 缺失的 `GetAlignedPointerFromEmbedderData` 符号而失效；

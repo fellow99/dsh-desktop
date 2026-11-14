@@ -63,7 +63,7 @@ Everything here is local `npm run make` output: no signing, no notarization, no 
 
 | Shell | dsh (upstream tag) | Electron | Platforms | Verified |
 |---|---|---|---|---|
-| `0.2.2` | `dsh-v0.2.2-rc.1` | `43.0.0` | Windows x64 · Linux x64 · macOS arm64 | artifacts produced by `npm run make`; runtime exercised via `npm start` |
+| `0.2.2` | `dsh-v0.2.2-rc.3` | `43.0.0` | Windows x64 · Linux x64 · macOS arm64 | artifacts produced by `npm run make`; runtime exercised via `npm start` |
 
 Upstream dsh is a **developer preview** and ships breaking changes. This shell pins one tag at a time: bumping it means adding `patches/<new-tag>/` and updating the pin in `scripts/build-dsh.mjs`.
 
@@ -72,7 +72,7 @@ Upstream dsh is a **developer preview** and ships breaking changes. This shell p
 Most dsh desktop shells are products. This one is deliberately documented like a specimen, so the working parts can be copied into your own shell:
 
 - `specs/` — as-built specs: host, window, tray, notifications, lifecycle, preload, app entry, desktop profile, plugin market
-- `patches/dsh-v0.2.2-rc.1/` — the three patches, each with its reason
+- `patches/dsh-v0.2.2-rc.3/` — the three patches, each with its reason
 - `AGENTS.md`, `docs/000-产品概念设计.md` — architecture and working conventions
 - `scripts/build-dsh.mjs` · `collect-dsh.mjs` · `fetch-runtime.mjs` — reproducible build, artifact collection, bundled-runtime channel
 
@@ -92,7 +92,7 @@ No preload bridge, no window-control channel: the renderer uses dsh's existing `
 ## Tech stack
 
 - **Electron** + **Electron Forge** (scaffolding & packaging)
-- **deepseek-harness** (`dsh`, a sibling directory of this project, not a submodule, referenced as `../deepseek-harness`; consumed via local source reference) — current build is based on **`dsh-v0.2.2-rc.1`**; its patches live in `patches/dsh-v0.2.2-rc.1/`
+- **deepseek-harness** (`dsh`, a sibling directory of this project, not a submodule, referenced as `../deepseek-harness`; consumed via local source reference) — current build is based on **`dsh-v0.2.2-rc.3`**; its patches live in `patches/dsh-v0.2.2-rc.3/`
 - **dsh-market** (a sibling directory, referenced as `../dsh-market`; the built-in visual plugin marketplace — npm package `dshmarket`)
 - **TypeScript**
 
@@ -116,20 +116,20 @@ npm run build:dsh   # ① git apply both patches under patches/ → ② pnpm ins
 **Prerequisite — sibling source checkouts.** This project consumes both `deepseek-harness` and `dsh-market` as sibling directories (not submodules). Before building, clone them next to this project:
 
 ```bash
-# dsh: pinned tag = dsh-v0.2.2-rc.1 (also set in .github/workflows; matches patches/dsh-v0.2.2-rc.1/)
-git clone --branch dsh-v0.2.2-rc.1 https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
+# dsh: pinned tag = dsh-v0.2.2-rc.3 (also set in .github/workflows; matches patches/dsh-v0.2.2-rc.3/)
+git clone --branch dsh-v0.2.2-rc.3 https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
 git clone --branch v1.26.0             https://github.com/dsh-market/dsh-market.git         ../dsh-market
 ```
 
 `collect-dsh.mjs` hard-fails if `../dsh-market` is missing (the packaged app bundles it as `dsh-dist/node_modules/dshmarket`); `build:dsh` warns and skips only the marketplace build if it is absent.
 
-> **dsh version pin.** This project builds against deepseek-harness tag **`dsh-v0.2.2-rc.1`**. Patches are organized per dsh version (`patches/<dsh-tag>/`) and `scripts/build-dsh.mjs` pins `patches/dsh-v0.2.2-rc.1/` — when bumping to a new dsh tag, add a matching `patches/<new-tag>/` directory and update that pin.
+> **dsh version pin.** This project builds against deepseek-harness tag **`dsh-v0.2.2-rc.3`**. Patches are organized per dsh version (`patches/<dsh-tag>/`) and `scripts/build-dsh.mjs` pins `patches/dsh-v0.2.2-rc.3/` — when bumping to a new dsh tag, add a matching `patches/<new-tag>/` directory and update that pin.
 
 | Patch | Purpose |
 |---|---|
-| `patches/dsh-v0.2.2-rc.1/dsh-disable-hmr.patch` | Adds a `DSH_DISABLE_HMR` switch to `runProfile`, skipping watch-only HMR (HMR depends on `--expose-internals`) |
-| `patches/dsh-v0.2.2-rc.1/dsh-disable-native-picker.patch` | Forces directory-picker to use browse under Electron (the native dialog worker fails because it spawns electron.exe) |
-| `patches/dsh-v0.2.2-rc.1/dsh-disable-welcome-notice.patch` | Drops the client's two `settings.onboarding` steps (the versioned internal-testing notice and the official-DeepSeek API-key prompt) so a first launch opens straight into the app, and updates `apply.client.spec.ts` to the shipped registration set |
+| `patches/dsh-v0.2.2-rc.3/dsh-disable-hmr.patch` | Adds a `DSH_DISABLE_HMR` switch to `runProfile`, skipping watch-only HMR (HMR depends on `--expose-internals`) |
+| `patches/dsh-v0.2.2-rc.3/dsh-disable-native-picker.patch` | Forces directory-picker to use browse under Electron (the native dialog worker fails because it spawns electron.exe) |
+| `patches/dsh-v0.2.2-rc.3/dsh-disable-welcome-notice.patch` | Drops the client's two `settings.onboarding` steps (the versioned internal-testing notice and the official-DeepSeek API-key prompt) so a first launch opens straight into the app, and updates `apply.client.spec.ts` to the shipped registration set |
 
 > Electron compatibility root cause: dsh's loader obtains the Node internal ESM loader via the
 > `node-addon-require-builtin` native module, which fails under Electron because Electron's V8

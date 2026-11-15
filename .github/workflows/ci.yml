@@ -17,7 +17,9 @@ jobs:
         include:
           - os: windows-latest
             artifact: dist-windows-x64
-          - os: ubuntu-latest
+          # 钉 24.04：ubuntu-latest 已迁至 26.04（rpm 6），其 rpmbuild 使 electron-installer-rpm
+          # 在 %install 阶段 `cp usr/*` 失败；24.04 自带 rpm 4.18，与 maker-rpm 兼容（2026-11 实测）。
+          - os: ubuntu-24.04
             artifact: dist-ubuntu-x64
           # GitHub 托管原生 ARM64 runner（公开仓库免费）。dsh 原生模块经 optionalDependencies
           # 按平台分发 prebuilt（含 linux-arm64），原生 arm runner 上 pnpm install 自动匹配，无需交叉编译。

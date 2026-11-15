@@ -21,9 +21,11 @@ jobs:
           # 在 %install 阶段 `cp usr/*` 失败；24.04 自带 rpm 4.18，与 maker-rpm 兼容（2026-11 实测）。
           - os: ubuntu-24.04
             artifact: dist-ubuntu-x64
-          # GitHub 托管原生 ARM64 runner（公开仓库免费）。dsh 原生模块经 optionalDependencies
-          # 按平台分发 prebuilt（含 linux-arm64），原生 arm runner 上 pnpm install 自动匹配，无需交叉编译。
-          - os: ubuntu-24.04-arm-arm64
+          # GitHub 托管原生 ARM64 runner 的标准 label 是 ubuntu-24.04-arm（无 -arm64 后缀；
+          # 写成 ubuntu-24.04-arm-arm64 会因无对应托管 runner 而永久 queued，2026-11 实测）。
+          # dsh 原生模块经 optionalDependencies 按平台分发 prebuilt（含 linux-arm64），
+          # 原生 arm runner 上 pnpm install 自动匹配，无需交叉编译。
+          - os: ubuntu-24.04-arm
             artifact: dist-ubuntu-arm64
           - os: macos-latest
             artifact: dist-macos-arm64

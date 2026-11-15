@@ -24,6 +24,10 @@ const patchFiles = [
   // Windows ACL 沙箱 runner 也必须由真实 Node 执行（无直接 spawn 等价物）；
   // 该补丁让 runner 的 node 可执行文件接受 DSH_SANDBOX_NODE_EXECUTABLE 覆盖。
   resolve(patchDir, 'dsh-sandbox-electron-node.patch'),
+  // RunAsNode fuse 关闭后，Linux/macOS 的 systemd-scope/PTY runner 同样不能用
+  // process.execPath（Electron 二进制）重入为 Node；该补丁让 spawnRunnerInvocation 在
+  // Electron 环境改用 DSH_SANDBOX_NODE_EXECUTABLE 指向的随包真实 Node（三平台统一）。
+  resolve(patchDir, 'dsh-subprocess-electron-node.patch'),
 ];
 
 // pnpm/tsdown 在无 TTY 时中止模块重建与依赖检查，故设 CI 使其自动处理

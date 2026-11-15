@@ -471,13 +471,18 @@ export async function startHost(): Promise<HostHandle | null> {
   // Electron 下不可用，禁用之（生产桌面壳无需用户 patch 热重载）。
   process.env.DSH_DISABLE_HMR = '1';
 
-  // RunAsNode fuse 关闭后 process.execPath 不能重入为 Node；Windows ACL 沙箱 runner
-  // 必须由真实 Node 执行，指向随包便携 Node（与市场通道共用 runtime/ 目录）。
-  if (process.platform === 'win32' && !process.env.DSH_SANDBOX_NODE_EXECUTABLE) {
-    const bundledNode = join(process.resourcesPath, 'runtime', 'node', 'node.exe');
+  // RunAsNode fuse 关闭后 process.execPath 不能重入为 Node：dsh 的子进程 runner
+  // （subprocess-local 的 spawnRunnerInvocation）在 Windows ACL 沙箱与 Linux/macOS 的
+  // systemd-scope/PTY 路径上都需要一个真实 Node 来执行 runner entry。统一指向随包便携
+  // Node（与市场通道共用 runtime/ 目录），由配套 dsh 补丁在 Electron 环境读取该变量。
+  if (!process.env.DSH_SANDBOX_NODE_EXECUTABLE) {
+    const nodeBase = join(process.resourcesPath, 'runtime', 'node');
+    const bundledNode = process.platform === 'win32'
+      ? join(nodeBase, 'node.exe')
+      : join(nodeBase, 'bin', 'node');
     if (existsSync(bundledNode)) {
       process.env.DSH_SANDBOX_NODE_EXECUTABLE = bundledNode;
-      console.log(`[dsh-desktop] Windows ACL 沙箱 runner → ${bundledNode}`);
+      console.log(`[dsh-desktop] 子进程 runner Node → ${bundledNode}`);
     }
   }
 

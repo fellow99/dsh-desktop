@@ -1,0 +1,28 @@
+diff --git a/packages/subprocess/subprocess-local/src/runner-launch.ts b/packages/subprocess/subprocess-local/src/runner-launch.ts
+index 1a052ded7c..7ca6838abb 100644
+--- a/packages/subprocess/subprocess-local/src/runner-launch.ts
++++ b/packages/subprocess/subprocess-local/src/runner-launch.ts
+@@ -28,13 +28,21 @@ const RUNNER_CONTROL_ENV_PREFIXES = ['NODE_', 'TSX_'] as const
+  */
+ export function spawnRunnerInvocation(): RunnerInvocation {
+   if ('pkg' in process) return [process.execPath]
++  // Packaged Electron builds flip the RunAsNode fuse off, so `process.execPath`
++  // (the Electron binary) cannot re-enter as the Node subprocess runner and crashes
++  // before consuming the launch request. The embedding host sets
++  // DSH_SANDBOX_NODE_EXECUTABLE to a real bundled Node for every platform; use it
++  // for the runner executable while keeping the same runner entry contract.
++  const runnerNode = 'electron' in process.versions
++    ? (process.env.DSH_SANDBOX_NODE_EXECUTABLE ?? process.execPath)
++    : process.execPath
+   /* v8 ignore next -- built-artifact smoke imports the emitted JavaScript runner entry;
+    * source-unit coverage cannot change import.meta.url. */
+   if (extname(fileURLToPath(import.meta.url)) !== '.ts') {
+-    return [process.execPath, fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-subprocess-local/runner'))]
++    return [runnerNode, fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-subprocess-local/runner'))]
+   }
+   return [
+-    process.execPath,
++    runnerNode,
+     '--import',
+     import.meta.resolve('tsx/esm'),
+     fileURLToPath(new URL('./bin.ts', import.meta.url)),

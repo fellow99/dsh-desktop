@@ -14,8 +14,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            artifact: dist-windows-x64
+          - os: ubuntu-latest
+            artifact: dist-ubuntu-x64
+          # GitHub 托管原生 ARM64 runner（公开仓库免费）。dsh 原生模块经 optionalDependencies
+          # 按平台分发 prebuilt（含 linux-arm64），原生 arm runner 上 pnpm install 自动匹配，无需交叉编译。
+          - os: ubuntu-24.04-arm-arm64
+            artifact: dist-ubuntu-arm64
+          - os: macos-latest
+            artifact: dist-macos-arm64
     runs-on: ${{ matrix.os }}
+    env:
+      # dsh build:lib:client 构建期内存峰值高，统一放宽老生代上限，规避 runner
+      # （macOS / ARM 规格较小）上的 JS heap OOM（历史 exit 134）。
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - uses: actions/checkout@v7
@@ -25,15 +39,15 @@ jobs:
       - name: Checkout dsh (sibling)
         shell: bash
         run: |
-          git clone --depth 1 --branch "dsh-v0.2.2-rc.1" \
+          git clone --depth 1 --branch "dsh-v0.2.2-rc.3" \
             https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
 
       # dsh-market（插件市场）同样以 ../dsh-market 同级源码引用：collect-dsh.mjs 会把其
-      # 构建产物物化为 dsh-dist/node_modules/dshmarket，缺失则打包硬失败。tag v1.26.0。
+      # 构建产物物化为 dsh-dist/node_modules/dshmarket，缺失则打包硬失败。tag v1.73.19。
       - name: Checkout dsh-market (sibling)
         shell: bash
         run: |
-          git clone --depth 1 --branch "v1.26.0" \
+          git clone --depth 1 --branch "v1.73.19" \
             https://github.com/dsh-market/dsh-market.git ../dsh-market
 
       - uses: actions/setup-node@v7
@@ -63,6 +77,6 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: dist-${{ matrix.os }}
+          name: ${{ matrix.artifact }}
           path: out/make/
           if-no-files-found: error

@@ -8,11 +8,11 @@ on:
       dsh_ref:
         description: 'dsh checkout ref（tag / branch / commit）'
         required: false
-        default: 'dsh-v0.2.2-rc.1'
+        default: 'dsh-v0.2.2-rc.3'
       dsh_market_ref:
         description: 'dsh-market checkout ref（tag / branch / commit）'
         required: false
-        default: 'v1.26.0'
+        default: 'v1.73.19'
       version:
         description: 'Release tag（例如 v0.1.0，仅手动触发时需填写）'
         required: true
@@ -22,8 +22,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            artifact: dist-windows-x64
+          - os: ubuntu-latest
+            artifact: dist-ubuntu-x64
+          # GitHub 托管原生 ARM64 runner（公开仓库免费）。dsh 原生模块经 optionalDependencies
+          # 按平台分发 prebuilt（含 linux-arm64），原生 arm runner 上 pnpm install 自动匹配，无需交叉编译。
+          - os: ubuntu-24.04-arm-arm64
+            artifact: dist-ubuntu-arm64
+          - os: macos-latest
+            artifact: dist-macos-arm64
     runs-on: ${{ matrix.os }}
+    env:
+      # dsh build:lib:client 构建期内存峰值高，统一放宽老生代上限，规避 runner
+      # （macOS / ARM 规格较小）上的 JS heap OOM（历史 exit 134）。
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - uses: actions/checkout@v7
@@ -33,17 +47,17 @@ jobs:
       - name: Checkout dsh (sibling)
         shell: bash
         env:
-          DSH_REF: ${{ github.event.inputs.dsh_ref || 'dsh-v0.2.2-rc.1' }}
+          DSH_REF: ${{ github.event.inputs.dsh_ref || 'dsh-v0.2.2-rc.3' }}
         run: |
           git clone --depth 1 --branch "${DSH_REF}" \
             https://github.com/deepseek-ai/deepseek-harness.git ../deepseek-harness
 
       # dsh-market（插件市场）同样以 ../dsh-market 同级源码引用：collect-dsh.mjs 物化其
-      # 构建产物为 dsh-dist/node_modules/dshmarket，缺失则打包硬失败。默认 tag v1.26.0。
+      # 构建产物为 dsh-dist/node_modules/dshmarket，缺失则打包硬失败。默认 tag v1.73.19。
       - name: Checkout dsh-market (sibling)
         shell: bash
         env:
-          DSH_MARKET_REF: ${{ github.event.inputs.dsh_market_ref || 'v1.26.0' }}
+          DSH_MARKET_REF: ${{ github.event.inputs.dsh_market_ref || 'v1.73.19' }}
         run: |
           git clone --depth 1 --branch "${DSH_MARKET_REF}" \
             https://github.com/dsh-market/dsh-market.git ../dsh-market
@@ -75,7 +89,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: dist-${{ matrix.os }}
+          name: ${{ matrix.artifact }}
           path: out/make/
           if-no-files-found: error
 

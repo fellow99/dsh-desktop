@@ -90,7 +90,13 @@ if (!existsSync(resolve(dshRoot, 'node_modules'))) {
   run('corepack pnpm install', dshRoot);
 }
 
-// 3. 构建产物（host lib + client lib + web dist）
+// 3. 构建产物（native addon + host lib + client lib + web dist）
+// 先编译当前 host 平台的 flock Node-API 原生模块：node-addon-system 的平台包以
+// workspace:~ 引用，pnpm install 物化的是空壳（无 bin/），其 bin/glibc|musl/system.node
+// 必须经 build:native-system 现编译，否则会话持久化 lease 加载原生锁时会因缺模块崩溃。
+// --host-addon-only 仅产出当前 host 的 glibc .node（无需 musl-gcc）；Windows 无平台包，
+// build.ts 检测到非 linux/darwin 会以 exit 0 安全跳过。上游 test/bench 均此前置该步骤。
+run('corepack pnpm run build:native-system', dshRoot);
 run('corepack pnpm run build:lib:host', dshRoot);
 run('corepack pnpm run build:lib:client', dshRoot);
 run('corepack pnpm run build:web', dshRoot);
